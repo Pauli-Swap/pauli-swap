@@ -1,27 +1,27 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma hyperion >=0.0;
 
-import {IHyperionV3Pool} from "../v3/core/interfaces/IHyperionV3Pool.hyp";
+import {IAcornV3Pool} from "../v3/core/interfaces/IAcornV3Pool.hyp";
 import {ISQRCTF1Minimal} from "../v3/core/interfaces/ISQRCTF1Minimal.hyp";
 import {
-    IHyperionV3MintCallback,
-    IHyperionV3SwapCallback,
-    IHyperionV3FlashCallback
-} from "../v3/core/interfaces/callback/IHyperionV3Callbacks.hyp";
+    IAcornV3MintCallback,
+    IAcornV3SwapCallback,
+    IAcornV3FlashCallback
+} from "../v3/core/interfaces/callback/IAcornV3Callbacks.hyp";
 
 /// @notice Minimal counterparty for the V3 pool used by the core test suite. It
 /// pays every callback out of its own balance, which is what lets the tests
 /// exercise the pool without the periphery.
-contract HyperionV3PoolCaller is
-    IHyperionV3MintCallback,
-    IHyperionV3SwapCallback,
-    IHyperionV3FlashCallback
+contract AcornV3PoolCaller is
+    IAcornV3MintCallback,
+    IAcornV3SwapCallback,
+    IAcornV3FlashCallback
 {
     function mint(address pool, address recipient, int24 tickLower, int24 tickUpper, uint128 amount)
         external
         returns (uint256 amount0, uint256 amount1)
     {
-        return IHyperionV3Pool(pool).mint(recipient, tickLower, tickUpper, amount, abi.encode(msg.sender));
+        return IAcornV3Pool(pool).mint(recipient, tickLower, tickUpper, amount, abi.encode(msg.sender));
     }
 
     function swap(
@@ -31,42 +31,42 @@ contract HyperionV3PoolCaller is
         int256 amountSpecified,
         uint160 sqrtPriceLimitX96
     ) external returns (int256 amount0, int256 amount1) {
-        return IHyperionV3Pool(pool).swap(
+        return IAcornV3Pool(pool).swap(
             recipient, zeroForOne, amountSpecified, sqrtPriceLimitX96, abi.encode(msg.sender)
         );
     }
 
     function flash(address pool, address recipient, uint256 amount0, uint256 amount1) external {
-        IHyperionV3Pool(pool).flash(recipient, amount0, amount1, abi.encode(msg.sender));
+        IAcornV3Pool(pool).flash(recipient, amount0, amount1, abi.encode(msg.sender));
     }
 
-    function hyperionV3MintCallback(uint256 amount0Owed, uint256 amount1Owed, bytes calldata data) external {
+    function acornV3MintCallback(uint256 amount0Owed, uint256 amount1Owed, bytes calldata data) external {
         address payer = abi.decode(data, (address));
         if (amount0Owed > 0) {
-            ISQRCTF1Minimal(IHyperionV3Pool(msg.sender).token0()).transferFrom(payer, msg.sender, amount0Owed);
+            ISQRCTF1Minimal(IAcornV3Pool(msg.sender).token0()).transferFrom(payer, msg.sender, amount0Owed);
         }
         if (amount1Owed > 0) {
-            ISQRCTF1Minimal(IHyperionV3Pool(msg.sender).token1()).transferFrom(payer, msg.sender, amount1Owed);
+            ISQRCTF1Minimal(IAcornV3Pool(msg.sender).token1()).transferFrom(payer, msg.sender, amount1Owed);
         }
     }
 
-    function hyperionV3SwapCallback(int256 amount0Delta, int256 amount1Delta, bytes calldata data) external {
+    function acornV3SwapCallback(int256 amount0Delta, int256 amount1Delta, bytes calldata data) external {
         address payer = abi.decode(data, (address));
         if (amount0Delta > 0) {
-            ISQRCTF1Minimal(IHyperionV3Pool(msg.sender).token0()).transferFrom(
+            ISQRCTF1Minimal(IAcornV3Pool(msg.sender).token0()).transferFrom(
                 payer, msg.sender, uint256(amount0Delta)
             );
         }
         if (amount1Delta > 0) {
-            ISQRCTF1Minimal(IHyperionV3Pool(msg.sender).token1()).transferFrom(
+            ISQRCTF1Minimal(IAcornV3Pool(msg.sender).token1()).transferFrom(
                 payer, msg.sender, uint256(amount1Delta)
             );
         }
     }
 
-    function hyperionV3FlashCallback(uint256 fee0, uint256 fee1, bytes calldata data) external {
+    function acornV3FlashCallback(uint256 fee0, uint256 fee1, bytes calldata data) external {
         address payer = abi.decode(data, (address));
-        IHyperionV3Pool pool = IHyperionV3Pool(msg.sender);
+        IAcornV3Pool pool = IAcornV3Pool(msg.sender);
         ISQRCTF1Minimal token0 = ISQRCTF1Minimal(pool.token0());
         ISQRCTF1Minimal token1 = ISQRCTF1Minimal(pool.token1());
         token0.transfer(msg.sender, token0.balanceOf(address(this)));

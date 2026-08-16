@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma hyperion >=0.0;
 
-import {HyperionV2Library} from "../v2/periphery/libraries/HyperionV2Library.hyp";
+import {AcornV2Library} from "../v2/periphery/libraries/AcornV2Library.hyp";
 
 /// @notice Exposes the internal library so tests can assert the pinned
 /// PAIR_INIT_CODE_HASH still derives the address the factory actually deploys.
-contract HyperionV2LibraryProbe {
+contract AcornV2LibraryProbe {
     function pairFor(address factory, address tokenA, address tokenB) external pure returns (address) {
-        return HyperionV2Library.pairFor(factory, tokenA, tokenB);
+        return AcornV2Library.pairFor(factory, tokenA, tokenB);
     }
 
     function initCodeHash() external pure returns (bytes32) {
-        return HyperionV2Library.PAIR_INIT_CODE_HASH;
+        return AcornV2Library.PAIR_INIT_CODE_HASH;
     }
 
     function getAmountOut(uint256 amountIn, uint256 reserveIn, uint256 reserveOut)
@@ -19,7 +19,7 @@ contract HyperionV2LibraryProbe {
         pure
         returns (uint256)
     {
-        return HyperionV2Library.getAmountOut(amountIn, reserveIn, reserveOut);
+        return AcornV2Library.getAmountOut(amountIn, reserveIn, reserveOut);
     }
 
     function getAmountIn(uint256 amountOut, uint256 reserveIn, uint256 reserveOut)
@@ -27,6 +27,6 @@ contract HyperionV2LibraryProbe {
         pure
         returns (uint256)
     {
-        return HyperionV2Library.getAmountIn(amountOut, reserveIn, reserveOut);
+        return AcornV2Library.getAmountIn(amountOut, reserveIn, reserveOut);
     }
 }

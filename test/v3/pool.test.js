@@ -15,8 +15,8 @@ const getMaxTick = (spacing) => Math.floor(887272 / spacing) * spacing;
 async function fixture() {
   const [wallet, other] = await ethers.getSigners();
 
-  const factory = await deploy('HyperionV3Factory', [], wallet);
-  const caller = await deploy('HyperionV3PoolCaller', [], wallet);
+  const factory = await deploy('AcornV3Factory', [], wallet);
+  const caller = await deploy('AcornV3PoolCaller', [], wallet);
 
   let tokenA = await deploy('TestSQRCTF1', [expandTo18Decimals(1000000)], wallet);
   let tokenB = await deploy('TestSQRCTF1', [expandTo18Decimals(1000000)], wallet);
@@ -26,7 +26,7 @@ async function fixture() {
 
   await factory.createPool(await tokenA.getAddress(), await tokenB.getAddress(), FEE_MEDIUM);
   const pool = await ethers.getContractAt(
-    artifactOf('HyperionV3Pool').abi,
+    artifactOf('AcornV3Pool').abi,
     await factory.getPool(await tokenA.getAddress(), await tokenB.getAddress(), FEE_MEDIUM),
     wallet
   );
@@ -51,7 +51,7 @@ async function initialized() {
   return ctx;
 }
 
-describe('HyperionV3Factory', () => {
+describe('AcornV3Factory', () => {
   it('enables the three canonical fee tiers', async () => {
     const { factory } = await loadFixture(fixture);
     expect(await factory.feeAmountTickSpacing(500)).to.equal(10n);
@@ -69,7 +69,7 @@ describe('HyperionV3Factory', () => {
           [await token0.getAddress(), await token1.getAddress(), FEE_MEDIUM]
         )
       ),
-      ethers.keccak256(artifactOf('HyperionV3Pool').bytecode)
+      ethers.keccak256(artifactOf('AcornV3Pool').bytecode)
     );
     expect(await pool.getAddress()).to.equal(expected);
   });
@@ -114,7 +114,7 @@ describe('HyperionV3Factory', () => {
   });
 });
 
-describe('HyperionV3Pool', () => {
+describe('AcornV3Pool', () => {
   it('is locked until initialized', async () => {
     const { pool, caller, wallet } = await loadFixture(fixture);
     const [sqrtPriceX96, , , , , , unlocked] = await pool.slot0();

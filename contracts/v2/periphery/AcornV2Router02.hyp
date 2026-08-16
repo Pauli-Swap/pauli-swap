@@ -1,20 +1,20 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma hyperion >=0.0;
 
-import {IHyperionV2Router02} from "./interfaces/IHyperionV2Router02.hyp";
+import {IAcornV2Router02} from "./interfaces/IAcornV2Router02.hyp";
 import {IWQRL} from "./interfaces/IWQRL.hyp";
-import {IHyperionV2Factory} from "../core/interfaces/IHyperionV2Factory.hyp";
-import {IHyperionV2Pair} from "../core/interfaces/IHyperionV2Pair.hyp";
-import {IHyperionV2SQRCTF1} from "../core/interfaces/IHyperionV2SQRCTF1.hyp";
-import {HyperionV2Library} from "./libraries/HyperionV2Library.hyp";
+import {IAcornV2Factory} from "../core/interfaces/IAcornV2Factory.hyp";
+import {IAcornV2Pair} from "../core/interfaces/IAcornV2Pair.hyp";
+import {IAcornV2SQRCTF1} from "../core/interfaces/IAcornV2SQRCTF1.hyp";
+import {AcornV2Library} from "./libraries/AcornV2Library.hyp";
 import {TransferHelper} from "./libraries/TransferHelper.hyp";
 
-contract HyperionV2Router02 is IHyperionV2Router02 {
+contract AcornV2Router02 is IAcornV2Router02 {
     address public immutable factory;
     address public immutable WQRL;
 
     modifier ensure(uint256 deadline) {
-        require(deadline >= block.timestamp, "HyperionV2Router: EXPIRED");
+        require(deadline >= block.timestamp, "AcornV2Router: EXPIRED");
         _;
     }
 
@@ -35,21 +35,21 @@ contract HyperionV2Router02 is IHyperionV2Router02 {
         uint256 amountAMin,
         uint256 amountBMin
     ) internal virtual returns (uint256 amountA, uint256 amountB) {
-        if (IHyperionV2Factory(factory).getPair(tokenA, tokenB) == address(0)) {
-            IHyperionV2Factory(factory).createPair(tokenA, tokenB);
+        if (IAcornV2Factory(factory).getPair(tokenA, tokenB) == address(0)) {
+            IAcornV2Factory(factory).createPair(tokenA, tokenB);
         }
-        (uint256 reserveA, uint256 reserveB) = HyperionV2Library.getReserves(factory, tokenA, tokenB);
+        (uint256 reserveA, uint256 reserveB) = AcornV2Library.getReserves(factory, tokenA, tokenB);
         if (reserveA == 0 && reserveB == 0) {
             (amountA, amountB) = (amountADesired, amountBDesired);
         } else {
-            uint256 amountBOptimal = HyperionV2Library.quote(amountADesired, reserveA, reserveB);
+            uint256 amountBOptimal = AcornV2Library.quote(amountADesired, reserveA, reserveB);
             if (amountBOptimal <= amountBDesired) {
-                require(amountBOptimal >= amountBMin, "HyperionV2Router: INSUFFICIENT_B_AMOUNT");
+                require(amountBOptimal >= amountBMin, "AcornV2Router: INSUFFICIENT_B_AMOUNT");
                 (amountA, amountB) = (amountADesired, amountBOptimal);
             } else {
-                uint256 amountAOptimal = HyperionV2Library.quote(amountBDesired, reserveB, reserveA);
+                uint256 amountAOptimal = AcornV2Library.quote(amountBDesired, reserveB, reserveA);
                 assert(amountAOptimal <= amountADesired);
-                require(amountAOptimal >= amountAMin, "HyperionV2Router: INSUFFICIENT_A_AMOUNT");
+                require(amountAOptimal >= amountAMin, "AcornV2Router: INSUFFICIENT_A_AMOUNT");
                 (amountA, amountB) = (amountAOptimal, amountBDesired);
             }
         }
@@ -66,10 +66,10 @@ contract HyperionV2Router02 is IHyperionV2Router02 {
         uint256 deadline
     ) external virtual ensure(deadline) returns (uint256 amountA, uint256 amountB, uint256 liquidity) {
         (amountA, amountB) = _addLiquidity(tokenA, tokenB, amountADesired, amountBDesired, amountAMin, amountBMin);
-        address pair = HyperionV2Library.pairFor(factory, tokenA, tokenB);
+        address pair = AcornV2Library.pairFor(factory, tokenA, tokenB);
         TransferHelper.safeTransferFrom(tokenA, msg.sender, pair, amountA);
         TransferHelper.safeTransferFrom(tokenB, msg.sender, pair, amountB);
-        liquidity = IHyperionV2Pair(pair).mint(to);
+        liquidity = IAcornV2Pair(pair).mint(to);
     }
 
     function addLiquidityQRL(
@@ -88,11 +88,11 @@ contract HyperionV2Router02 is IHyperionV2Router02 {
     {
         (amountToken, amountQRL) =
             _addLiquidity(token, WQRL, amountTokenDesired, msg.value, amountTokenMin, amountQRLMin);
-        address pair = HyperionV2Library.pairFor(factory, token, WQRL);
+        address pair = AcornV2Library.pairFor(factory, token, WQRL);
         TransferHelper.safeTransferFrom(token, msg.sender, pair, amountToken);
         IWQRL(WQRL).deposit{value: amountQRL}();
         assert(IWQRL(WQRL).transfer(pair, amountQRL));
-        liquidity = IHyperionV2Pair(pair).mint(to);
+        liquidity = IAcornV2Pair(pair).mint(to);
         if (msg.value > amountQRL) TransferHelper.safeTransferQRL(msg.sender, msg.value - amountQRL);
     }
 
@@ -105,13 +105,13 @@ contract HyperionV2Router02 is IHyperionV2Router02 {
         address to,
         uint256 deadline
     ) public virtual ensure(deadline) returns (uint256 amountA, uint256 amountB) {
-        address pair = HyperionV2Library.pairFor(factory, tokenA, tokenB);
-        IHyperionV2Pair(pair).transferFrom(msg.sender, pair, liquidity);
-        (uint256 amount0, uint256 amount1) = IHyperionV2Pair(pair).burn(to);
-        (address token0,) = HyperionV2Library.sortTokens(tokenA, tokenB);
+        address pair = AcornV2Library.pairFor(factory, tokenA, tokenB);
+        IAcornV2Pair(pair).transferFrom(msg.sender, pair, liquidity);
+        (uint256 amount0, uint256 amount1) = IAcornV2Pair(pair).burn(to);
+        (address token0,) = AcornV2Library.sortTokens(tokenA, tokenB);
         (amountA, amountB) = tokenA == token0 ? (amount0, amount1) : (amount1, amount0);
-        require(amountA >= amountAMin, "HyperionV2Router: INSUFFICIENT_A_AMOUNT");
-        require(amountB >= amountBMin, "HyperionV2Router: INSUFFICIENT_B_AMOUNT");
+        require(amountA >= amountAMin, "AcornV2Router: INSUFFICIENT_A_AMOUNT");
+        require(amountB >= amountBMin, "AcornV2Router: INSUFFICIENT_B_AMOUNT");
     }
 
     function removeLiquidityQRL(
@@ -139,7 +139,7 @@ contract HyperionV2Router02 is IHyperionV2Router02 {
     ) public virtual ensure(deadline) returns (uint256 amountQRL) {
         (, amountQRL) =
             removeLiquidity(token, WQRL, liquidity, amountTokenMin, amountQRLMin, address(this), deadline);
-        TransferHelper.safeTransfer(token, to, IHyperionV2SQRCTF1(token).balanceOf(address(this)));
+        TransferHelper.safeTransfer(token, to, IAcornV2SQRCTF1(token).balanceOf(address(this)));
         IWQRL(WQRL).withdraw(amountQRL);
         TransferHelper.safeTransferQRL(to, amountQRL);
     }
@@ -148,12 +148,12 @@ contract HyperionV2Router02 is IHyperionV2Router02 {
     function _swap(uint256[] memory amounts, address[] memory path, address _to) internal virtual {
         for (uint256 i; i < path.length - 1; i++) {
             (address input, address output) = (path[i], path[i + 1]);
-            (address token0,) = HyperionV2Library.sortTokens(input, output);
+            (address token0,) = AcornV2Library.sortTokens(input, output);
             uint256 amountOut = amounts[i + 1];
             (uint256 amount0Out, uint256 amount1Out) =
                 input == token0 ? (uint256(0), amountOut) : (amountOut, uint256(0));
-            address to = i < path.length - 2 ? HyperionV2Library.pairFor(factory, output, path[i + 2]) : _to;
-            IHyperionV2Pair(HyperionV2Library.pairFor(factory, input, output)).swap(
+            address to = i < path.length - 2 ? AcornV2Library.pairFor(factory, output, path[i + 2]) : _to;
+            IAcornV2Pair(AcornV2Library.pairFor(factory, input, output)).swap(
                 amount0Out, amount1Out, to, new bytes(0)
             );
         }
@@ -166,10 +166,10 @@ contract HyperionV2Router02 is IHyperionV2Router02 {
         address to,
         uint256 deadline
     ) external virtual ensure(deadline) returns (uint256[] memory amounts) {
-        amounts = HyperionV2Library.getAmountsOut(factory, amountIn, path);
-        require(amounts[amounts.length - 1] >= amountOutMin, "HyperionV2Router: INSUFFICIENT_OUTPUT_AMOUNT");
+        amounts = AcornV2Library.getAmountsOut(factory, amountIn, path);
+        require(amounts[amounts.length - 1] >= amountOutMin, "AcornV2Router: INSUFFICIENT_OUTPUT_AMOUNT");
         TransferHelper.safeTransferFrom(
-            path[0], msg.sender, HyperionV2Library.pairFor(factory, path[0], path[1]), amounts[0]
+            path[0], msg.sender, AcornV2Library.pairFor(factory, path[0], path[1]), amounts[0]
         );
         _swap(amounts, path, to);
     }
@@ -181,10 +181,10 @@ contract HyperionV2Router02 is IHyperionV2Router02 {
         address to,
         uint256 deadline
     ) external virtual ensure(deadline) returns (uint256[] memory amounts) {
-        amounts = HyperionV2Library.getAmountsIn(factory, amountOut, path);
-        require(amounts[0] <= amountInMax, "HyperionV2Router: EXCESSIVE_INPUT_AMOUNT");
+        amounts = AcornV2Library.getAmountsIn(factory, amountOut, path);
+        require(amounts[0] <= amountInMax, "AcornV2Router: EXCESSIVE_INPUT_AMOUNT");
         TransferHelper.safeTransferFrom(
-            path[0], msg.sender, HyperionV2Library.pairFor(factory, path[0], path[1]), amounts[0]
+            path[0], msg.sender, AcornV2Library.pairFor(factory, path[0], path[1]), amounts[0]
         );
         _swap(amounts, path, to);
     }
@@ -195,11 +195,11 @@ contract HyperionV2Router02 is IHyperionV2Router02 {
         address to,
         uint256 deadline
     ) external payable virtual ensure(deadline) returns (uint256[] memory amounts) {
-        require(path[0] == WQRL, "HyperionV2Router: INVALID_PATH");
-        amounts = HyperionV2Library.getAmountsOut(factory, msg.value, path);
-        require(amounts[amounts.length - 1] >= amountOutMin, "HyperionV2Router: INSUFFICIENT_OUTPUT_AMOUNT");
+        require(path[0] == WQRL, "AcornV2Router: INVALID_PATH");
+        amounts = AcornV2Library.getAmountsOut(factory, msg.value, path);
+        require(amounts[amounts.length - 1] >= amountOutMin, "AcornV2Router: INSUFFICIENT_OUTPUT_AMOUNT");
         IWQRL(WQRL).deposit{value: amounts[0]}();
-        assert(IWQRL(WQRL).transfer(HyperionV2Library.pairFor(factory, path[0], path[1]), amounts[0]));
+        assert(IWQRL(WQRL).transfer(AcornV2Library.pairFor(factory, path[0], path[1]), amounts[0]));
         _swap(amounts, path, to);
     }
 
@@ -210,11 +210,11 @@ contract HyperionV2Router02 is IHyperionV2Router02 {
         address to,
         uint256 deadline
     ) external virtual ensure(deadline) returns (uint256[] memory amounts) {
-        require(path[path.length - 1] == WQRL, "HyperionV2Router: INVALID_PATH");
-        amounts = HyperionV2Library.getAmountsIn(factory, amountOut, path);
-        require(amounts[0] <= amountInMax, "HyperionV2Router: EXCESSIVE_INPUT_AMOUNT");
+        require(path[path.length - 1] == WQRL, "AcornV2Router: INVALID_PATH");
+        amounts = AcornV2Library.getAmountsIn(factory, amountOut, path);
+        require(amounts[0] <= amountInMax, "AcornV2Router: EXCESSIVE_INPUT_AMOUNT");
         TransferHelper.safeTransferFrom(
-            path[0], msg.sender, HyperionV2Library.pairFor(factory, path[0], path[1]), amounts[0]
+            path[0], msg.sender, AcornV2Library.pairFor(factory, path[0], path[1]), amounts[0]
         );
         _swap(amounts, path, address(this));
         IWQRL(WQRL).withdraw(amounts[amounts.length - 1]);
@@ -228,11 +228,11 @@ contract HyperionV2Router02 is IHyperionV2Router02 {
         address to,
         uint256 deadline
     ) external virtual ensure(deadline) returns (uint256[] memory amounts) {
-        require(path[path.length - 1] == WQRL, "HyperionV2Router: INVALID_PATH");
-        amounts = HyperionV2Library.getAmountsOut(factory, amountIn, path);
-        require(amounts[amounts.length - 1] >= amountOutMin, "HyperionV2Router: INSUFFICIENT_OUTPUT_AMOUNT");
+        require(path[path.length - 1] == WQRL, "AcornV2Router: INVALID_PATH");
+        amounts = AcornV2Library.getAmountsOut(factory, amountIn, path);
+        require(amounts[amounts.length - 1] >= amountOutMin, "AcornV2Router: INSUFFICIENT_OUTPUT_AMOUNT");
         TransferHelper.safeTransferFrom(
-            path[0], msg.sender, HyperionV2Library.pairFor(factory, path[0], path[1]), amounts[0]
+            path[0], msg.sender, AcornV2Library.pairFor(factory, path[0], path[1]), amounts[0]
         );
         _swap(amounts, path, address(this));
         IWQRL(WQRL).withdraw(amounts[amounts.length - 1]);
@@ -245,11 +245,11 @@ contract HyperionV2Router02 is IHyperionV2Router02 {
         address to,
         uint256 deadline
     ) external payable virtual ensure(deadline) returns (uint256[] memory amounts) {
-        require(path[0] == WQRL, "HyperionV2Router: INVALID_PATH");
-        amounts = HyperionV2Library.getAmountsIn(factory, amountOut, path);
-        require(amounts[0] <= msg.value, "HyperionV2Router: EXCESSIVE_INPUT_AMOUNT");
+        require(path[0] == WQRL, "AcornV2Router: INVALID_PATH");
+        amounts = AcornV2Library.getAmountsIn(factory, amountOut, path);
+        require(amounts[0] <= msg.value, "AcornV2Router: EXCESSIVE_INPUT_AMOUNT");
         IWQRL(WQRL).deposit{value: amounts[0]}();
-        assert(IWQRL(WQRL).transfer(HyperionV2Library.pairFor(factory, path[0], path[1]), amounts[0]));
+        assert(IWQRL(WQRL).transfer(AcornV2Library.pairFor(factory, path[0], path[1]), amounts[0]));
         _swap(amounts, path, to);
         if (msg.value > amounts[0]) TransferHelper.safeTransferQRL(msg.sender, msg.value - amounts[0]);
     }
@@ -258,20 +258,20 @@ contract HyperionV2Router02 is IHyperionV2Router02 {
     function _swapSupportingFeeOnTransferTokens(address[] memory path, address _to) internal virtual {
         for (uint256 i; i < path.length - 1; i++) {
             (address input, address output) = (path[i], path[i + 1]);
-            (address token0,) = HyperionV2Library.sortTokens(input, output);
-            IHyperionV2Pair pair = IHyperionV2Pair(HyperionV2Library.pairFor(factory, input, output));
+            (address token0,) = AcornV2Library.sortTokens(input, output);
+            IAcornV2Pair pair = IAcornV2Pair(AcornV2Library.pairFor(factory, input, output));
             uint256 amountInput;
             uint256 amountOutput;
             {
                 (uint256 reserve0, uint256 reserve1,) = pair.getReserves();
                 (uint256 reserveInput, uint256 reserveOutput) =
                     input == token0 ? (reserve0, reserve1) : (reserve1, reserve0);
-                amountInput = IHyperionV2SQRCTF1(input).balanceOf(address(pair)) - reserveInput;
-                amountOutput = HyperionV2Library.getAmountOut(amountInput, reserveInput, reserveOutput);
+                amountInput = IAcornV2SQRCTF1(input).balanceOf(address(pair)) - reserveInput;
+                amountOutput = AcornV2Library.getAmountOut(amountInput, reserveInput, reserveOutput);
             }
             (uint256 amount0Out, uint256 amount1Out) =
                 input == token0 ? (uint256(0), amountOutput) : (amountOutput, uint256(0));
-            address to = i < path.length - 2 ? HyperionV2Library.pairFor(factory, output, path[i + 2]) : _to;
+            address to = i < path.length - 2 ? AcornV2Library.pairFor(factory, output, path[i + 2]) : _to;
             pair.swap(amount0Out, amount1Out, to, new bytes(0));
         }
     }
@@ -284,13 +284,13 @@ contract HyperionV2Router02 is IHyperionV2Router02 {
         uint256 deadline
     ) external virtual ensure(deadline) {
         TransferHelper.safeTransferFrom(
-            path[0], msg.sender, HyperionV2Library.pairFor(factory, path[0], path[1]), amountIn
+            path[0], msg.sender, AcornV2Library.pairFor(factory, path[0], path[1]), amountIn
         );
-        uint256 balanceBefore = IHyperionV2SQRCTF1(path[path.length - 1]).balanceOf(to);
+        uint256 balanceBefore = IAcornV2SQRCTF1(path[path.length - 1]).balanceOf(to);
         _swapSupportingFeeOnTransferTokens(path, to);
         require(
-            IHyperionV2SQRCTF1(path[path.length - 1]).balanceOf(to) - balanceBefore >= amountOutMin,
-            "HyperionV2Router: INSUFFICIENT_OUTPUT_AMOUNT"
+            IAcornV2SQRCTF1(path[path.length - 1]).balanceOf(to) - balanceBefore >= amountOutMin,
+            "AcornV2Router: INSUFFICIENT_OUTPUT_AMOUNT"
         );
     }
 
@@ -300,15 +300,15 @@ contract HyperionV2Router02 is IHyperionV2Router02 {
         address to,
         uint256 deadline
     ) external payable virtual ensure(deadline) {
-        require(path[0] == WQRL, "HyperionV2Router: INVALID_PATH");
+        require(path[0] == WQRL, "AcornV2Router: INVALID_PATH");
         uint256 amountIn = msg.value;
         IWQRL(WQRL).deposit{value: amountIn}();
-        assert(IWQRL(WQRL).transfer(HyperionV2Library.pairFor(factory, path[0], path[1]), amountIn));
-        uint256 balanceBefore = IHyperionV2SQRCTF1(path[path.length - 1]).balanceOf(to);
+        assert(IWQRL(WQRL).transfer(AcornV2Library.pairFor(factory, path[0], path[1]), amountIn));
+        uint256 balanceBefore = IAcornV2SQRCTF1(path[path.length - 1]).balanceOf(to);
         _swapSupportingFeeOnTransferTokens(path, to);
         require(
-            IHyperionV2SQRCTF1(path[path.length - 1]).balanceOf(to) - balanceBefore >= amountOutMin,
-            "HyperionV2Router: INSUFFICIENT_OUTPUT_AMOUNT"
+            IAcornV2SQRCTF1(path[path.length - 1]).balanceOf(to) - balanceBefore >= amountOutMin,
+            "AcornV2Router: INSUFFICIENT_OUTPUT_AMOUNT"
         );
     }
 
@@ -319,13 +319,13 @@ contract HyperionV2Router02 is IHyperionV2Router02 {
         address to,
         uint256 deadline
     ) external virtual ensure(deadline) {
-        require(path[path.length - 1] == WQRL, "HyperionV2Router: INVALID_PATH");
+        require(path[path.length - 1] == WQRL, "AcornV2Router: INVALID_PATH");
         TransferHelper.safeTransferFrom(
-            path[0], msg.sender, HyperionV2Library.pairFor(factory, path[0], path[1]), amountIn
+            path[0], msg.sender, AcornV2Library.pairFor(factory, path[0], path[1]), amountIn
         );
         _swapSupportingFeeOnTransferTokens(path, address(this));
-        uint256 amountOut = IHyperionV2SQRCTF1(WQRL).balanceOf(address(this));
-        require(amountOut >= amountOutMin, "HyperionV2Router: INSUFFICIENT_OUTPUT_AMOUNT");
+        uint256 amountOut = IAcornV2SQRCTF1(WQRL).balanceOf(address(this));
+        require(amountOut >= amountOutMin, "AcornV2Router: INSUFFICIENT_OUTPUT_AMOUNT");
         IWQRL(WQRL).withdraw(amountOut);
         TransferHelper.safeTransferQRL(to, amountOut);
     }
@@ -336,7 +336,7 @@ contract HyperionV2Router02 is IHyperionV2Router02 {
         virtual
         returns (uint256 amountB)
     {
-        return HyperionV2Library.quote(amountA, reserveA, reserveB);
+        return AcornV2Library.quote(amountA, reserveA, reserveB);
     }
 
     function getAmountOut(uint256 amountIn, uint256 reserveIn, uint256 reserveOut)
@@ -345,7 +345,7 @@ contract HyperionV2Router02 is IHyperionV2Router02 {
         virtual
         returns (uint256 amountOut)
     {
-        return HyperionV2Library.getAmountOut(amountIn, reserveIn, reserveOut);
+        return AcornV2Library.getAmountOut(amountIn, reserveIn, reserveOut);
     }
 
     function getAmountIn(uint256 amountOut, uint256 reserveIn, uint256 reserveOut)
@@ -354,7 +354,7 @@ contract HyperionV2Router02 is IHyperionV2Router02 {
         virtual
         returns (uint256 amountIn)
     {
-        return HyperionV2Library.getAmountIn(amountOut, reserveIn, reserveOut);
+        return AcornV2Library.getAmountIn(amountOut, reserveIn, reserveOut);
     }
 
     function getAmountsOut(uint256 amountIn, address[] memory path)
@@ -363,7 +363,7 @@ contract HyperionV2Router02 is IHyperionV2Router02 {
         virtual
         returns (uint256[] memory amounts)
     {
-        return HyperionV2Library.getAmountsOut(factory, amountIn, path);
+        return AcornV2Library.getAmountsOut(factory, amountIn, path);
     }
 
     function getAmountsIn(uint256 amountOut, address[] memory path)
@@ -372,6 +372,6 @@ contract HyperionV2Router02 is IHyperionV2Router02 {
         virtual
         returns (uint256[] memory amounts)
     {
-        return HyperionV2Library.getAmountsIn(factory, amountOut, path);
+        return AcornV2Library.getAmountsIn(factory, amountOut, path);
     }
 }

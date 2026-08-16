@@ -2,7 +2,7 @@
 pragma hyperion >=0.0;
 
 /// @title Pool state that never changes
-interface IHyperionV3PoolImmutables {
+interface IAcornV3PoolImmutables {
     function factory() external view returns (address);
 
     function token0() external view returns (address);
@@ -17,7 +17,7 @@ interface IHyperionV3PoolImmutables {
 }
 
 /// @title Pool state that can change
-interface IHyperionV3PoolState {
+interface IAcornV3PoolState {
     function slot0()
         external
         view
@@ -78,7 +78,7 @@ interface IHyperionV3PoolState {
 }
 
 /// @title Pool state that is not stored
-interface IHyperionV3PoolDerivedState {
+interface IAcornV3PoolDerivedState {
     function observe(uint32[] calldata secondsAgos)
         external
         view
@@ -91,7 +91,7 @@ interface IHyperionV3PoolDerivedState {
 }
 
 /// @title Permissionless pool actions
-interface IHyperionV3PoolActions {
+interface IAcornV3PoolActions {
     function initialize(uint160 sqrtPriceX96) external;
 
     function mint(
@@ -128,7 +128,7 @@ interface IHyperionV3PoolActions {
 }
 
 /// @title Permissioned pool actions
-interface IHyperionV3PoolOwnerActions {
+interface IAcornV3PoolOwnerActions {
     function setFeeProtocol(uint8 feeProtocol0, uint8 feeProtocol1) external;
 
     function collectProtocol(address recipient, uint128 amount0Requested, uint128 amount1Requested)
@@ -137,7 +137,7 @@ interface IHyperionV3PoolOwnerActions {
 }
 
 /// @title Events emitted by a pool
-interface IHyperionV3PoolEvents {
+interface IAcornV3PoolEvents {
     event Initialize(uint160 sqrtPriceX96, int24 tick);
 
     event Mint(
@@ -197,12 +197,12 @@ interface IHyperionV3PoolEvents {
     event CollectProtocol(address indexed sender, address indexed recipient, uint128 amount0, uint128 amount1);
 }
 
-/// @title The interface for a Hyperion V3 Pool
-interface IHyperionV3Pool is
-    IHyperionV3PoolImmutables,
-    IHyperionV3PoolState,
-    IHyperionV3PoolDerivedState,
-    IHyperionV3PoolActions,
-    IHyperionV3PoolOwnerActions,
-    IHyperionV3PoolEvents
+/// @title The interface for a Acorn V3 Pool
+interface IAcornV3Pool is
+    IAcornV3PoolImmutables,
+    IAcornV3PoolState,
+    IAcornV3PoolDerivedState,
+    IAcornV3PoolActions,
+    IAcornV3PoolOwnerActions,
+    IAcornV3PoolEvents
 {}

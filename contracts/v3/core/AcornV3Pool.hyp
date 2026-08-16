@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma hyperion >=0.0;
 
-import {IHyperionV3Pool} from "./interfaces/IHyperionV3Pool.hyp";
-import {IHyperionV3PoolDeployer} from "./interfaces/IHyperionV3PoolDeployer.hyp";
-import {IHyperionV3Factory} from "./interfaces/IHyperionV3Factory.hyp";
+import {IAcornV3Pool} from "./interfaces/IAcornV3Pool.hyp";
+import {IAcornV3PoolDeployer} from "./interfaces/IAcornV3PoolDeployer.hyp";
+import {IAcornV3Factory} from "./interfaces/IAcornV3Factory.hyp";
 import {ISQRCTF1Minimal} from "./interfaces/ISQRCTF1Minimal.hyp";
 import {
-    IHyperionV3MintCallback,
-    IHyperionV3SwapCallback,
-    IHyperionV3FlashCallback
-} from "./interfaces/callback/IHyperionV3Callbacks.hyp";
+    IAcornV3MintCallback,
+    IAcornV3SwapCallback,
+    IAcornV3FlashCallback
+} from "./interfaces/callback/IAcornV3Callbacks.hyp";
 import {NoDelegateCall} from "./NoDelegateCall.hyp";
 import {SafeCast} from "./libraries/SafeCast.hyp";
 import {Tick} from "./libraries/Tick.hyp";
@@ -24,7 +24,7 @@ import {LiquidityMath} from "./libraries/LiquidityMath.hyp";
 import {SqrtPriceMath} from "./libraries/SqrtPriceMath.hyp";
 import {SwapMath} from "./libraries/SwapMath.hyp";
 
-contract HyperionV3Pool is IHyperionV3Pool, NoDelegateCall {
+contract AcornV3Pool is IAcornV3Pool, NoDelegateCall {
     using SafeCast for uint256;
     using SafeCast for int256;
     using Tick for mapping(int24 => Tick.Info);
@@ -79,13 +79,13 @@ contract HyperionV3Pool is IHyperionV3Pool, NoDelegateCall {
     }
 
     modifier onlyFactoryOwner() {
-        require(msg.sender == IHyperionV3Factory(factory).owner());
+        require(msg.sender == IAcornV3Factory(factory).owner());
         _;
     }
 
     constructor() {
         int24 _tickSpacing;
-        (factory, token0, token1, fee, _tickSpacing) = IHyperionV3PoolDeployer(msg.sender).parameters();
+        (factory, token0, token1, fee, _tickSpacing) = IAcornV3PoolDeployer(msg.sender).parameters();
         tickSpacing = _tickSpacing;
 
         maxLiquidityPerTick = Tick.tickSpacingToMaxLiquidityPerTick(_tickSpacing);
@@ -368,7 +368,7 @@ contract HyperionV3Pool is IHyperionV3Pool, NoDelegateCall {
         uint256 balance1Before;
         if (amount0 > 0) balance0Before = balance0();
         if (amount1 > 0) balance1Before = balance1();
-        IHyperionV3MintCallback(msg.sender).hyperionV3MintCallback(amount0, amount1, data);
+        IAcornV3MintCallback(msg.sender).acornV3MintCallback(amount0, amount1, data);
         if (amount0 > 0) require(balance0Before + amount0 <= balance0(), "M0");
         if (amount1 > 0) require(balance1Before + amount1 <= balance1(), "M1");
 
@@ -629,7 +629,7 @@ contract HyperionV3Pool is IHyperionV3Pool, NoDelegateCall {
             }
 
             uint256 balance0Before = balance0();
-            IHyperionV3SwapCallback(msg.sender).hyperionV3SwapCallback(amount0, amount1, data);
+            IAcornV3SwapCallback(msg.sender).acornV3SwapCallback(amount0, amount1, data);
             require(balance0Before + uint256(amount0) <= balance0(), "IIA");
         } else {
             if (amount0 < 0) {
@@ -639,7 +639,7 @@ contract HyperionV3Pool is IHyperionV3Pool, NoDelegateCall {
             }
 
             uint256 balance1Before = balance1();
-            IHyperionV3SwapCallback(msg.sender).hyperionV3SwapCallback(amount0, amount1, data);
+            IAcornV3SwapCallback(msg.sender).acornV3SwapCallback(amount0, amount1, data);
             require(balance1Before + uint256(amount1) <= balance1(), "IIA");
         }
 
@@ -663,7 +663,7 @@ contract HyperionV3Pool is IHyperionV3Pool, NoDelegateCall {
         if (amount0 > 0) TransferHelper.safeTransfer(token0, recipient, amount0);
         if (amount1 > 0) TransferHelper.safeTransfer(token1, recipient, amount1);
 
-        IHyperionV3FlashCallback(msg.sender).hyperionV3FlashCallback(fee0, fee1, data);
+        IAcornV3FlashCallback(msg.sender).acornV3FlashCallback(fee0, fee1, data);
 
         uint256 balance0After = balance0();
         uint256 balance1After = balance1();

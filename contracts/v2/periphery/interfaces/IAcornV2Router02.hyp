@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma hyperion >=0.0;
 
-import {IHyperionV2Router01} from "./IHyperionV2Router01.hyp";
+import {IAcornV2Router01} from "./IAcornV2Router01.hyp";
 
-interface IHyperionV2Router02 is IHyperionV2Router01 {
+interface IAcornV2Router02 is IAcornV2Router01 {
     function removeLiquidityQRLSupportingFeeOnTransferTokens(
         address token,
         uint256 liquidity,

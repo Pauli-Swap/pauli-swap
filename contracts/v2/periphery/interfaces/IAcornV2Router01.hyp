@@ -4,7 +4,7 @@ pragma hyperion >=0.0;
 /// @dev Port of IUniswapV2Router01 with WETH renamed to WQRL and every
 /// `*WithPermit` entry point removed: EIP-2612 needs ecrecover, which Zond does
 /// not provide.
-interface IHyperionV2Router01 {
+interface IAcornV2Router01 {
     function factory() external view returns (address);
 
     function WQRL() external view returns (address);

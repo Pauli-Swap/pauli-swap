@@ -6,10 +6,10 @@ const { deploy, artifactOf, expandTo18Decimals, MINIMUM_LIQUIDITY, MaxUint256 } 
 async function fixture() {
   const [wallet, other] = await ethers.getSigners();
 
-  const factory = await deploy('HyperionV2Factory', [wallet.address], wallet);
+  const factory = await deploy('AcornV2Factory', [wallet.address], wallet);
   const wqrl = await deploy('WQRL', [], wallet);
   const router = await deploy(
-    'HyperionV2Router02',
+    'AcornV2Router02',
     [await factory.getAddress(), await wqrl.getAddress()],
     wallet
   );
@@ -28,10 +28,10 @@ async function fixture() {
 const deadline = () => Math.floor(Date.now() / 1000) + 3600;
 
 async function pairOf(factory, a, b) {
-  return ethers.getContractAt(artifactOf('HyperionV2Pair').abi, await factory.getPair(a, b));
+  return ethers.getContractAt(artifactOf('AcornV2Pair').abi, await factory.getPair(a, b));
 }
 
-describe('HyperionV2Router02', () => {
+describe('AcornV2Router02', () => {
   it('derives pair addresses off chain with the pinned init code hash', async () => {
     const { factory, router, tokenA, tokenB, wallet } = await loadFixture(fixture);
     await router.addLiquidity(
@@ -47,7 +47,7 @@ describe('HyperionV2Router02', () => {
 
     // If PAIR_INIT_CODE_HASH drifts from the compiled pair, every router entry
     // point silently targets an address with no code.
-    const probe = await deploy('HyperionV2LibraryProbe', [], wallet);
+    const probe = await deploy('AcornV2LibraryProbe', [], wallet);
     expect(
       await probe.pairFor(
         await factory.getAddress(),
@@ -92,7 +92,7 @@ describe('HyperionV2Router02', () => {
         wallet.address,
         deadline()
       )
-    ).to.be.revertedWith('HyperionV2Router: INSUFFICIENT_B_AMOUNT');
+    ).to.be.revertedWith('AcornV2Router: INSUFFICIENT_B_AMOUNT');
   });
 
   it('rejects an expired deadline', async () => {
@@ -108,7 +108,7 @@ describe('HyperionV2Router02', () => {
         wallet.address,
         1
       )
-    ).to.be.revertedWith('HyperionV2Router: EXPIRED');
+    ).to.be.revertedWith('AcornV2Router: EXPIRED');
   });
 
   it('removes liquidity back to the depositor', async () => {
@@ -165,7 +165,7 @@ describe('HyperionV2Router02', () => {
 
     await expect(
       router.swapExactTokensForTokens(amountIn, expectedOut + 1n, path, wallet.address, deadline())
-    ).to.be.revertedWith('HyperionV2Router: INSUFFICIENT_OUTPUT_AMOUNT');
+    ).to.be.revertedWith('AcornV2Router: INSUFFICIENT_OUTPUT_AMOUNT');
   });
 
   it('wraps and unwraps native QRL through WQRL', async () => {

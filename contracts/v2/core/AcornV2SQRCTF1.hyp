@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma hyperion >=0.0;
 
-import {IHyperionV2SQRCTF1} from "./interfaces/IHyperionV2SQRCTF1.hyp";
+import {IAcornV2SQRCTF1} from "./interfaces/IAcornV2SQRCTF1.hyp";
 
-/// @title Liquidity token for Hyperion V2 pairs
+/// @title Liquidity token for Acorn V2 pairs
 /// @dev Port of Uniswap V2's UniswapV2ERC20. SafeMath is gone because Hyperion
 /// reverts on overflow by default, and the EIP-2612 `permit` entry point is
 /// removed outright: Zond exposes no ecrecover precompile, so a signature based
 /// approval cannot be verified on chain. Holders must use `approve`.
-contract HyperionV2SQRCTF1 is IHyperionV2SQRCTF1 {
-    string public constant NAME = "Hyperion V2";
-    string public constant SYMBOL = "HYP-V2";
+contract AcornV2SQRCTF1 is IAcornV2SQRCTF1 {
+    string public constant NAME = "Acorn V2";
+    string public constant SYMBOL = "ACORN-V2";
     uint8 public constant DECIMALS = 18;
 
     uint256 public totalSupply;

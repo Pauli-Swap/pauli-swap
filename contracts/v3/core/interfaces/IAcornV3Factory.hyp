@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma hyperion >=0.0;
 
-/// @title The interface for the Hyperion V3 Factory
-interface IHyperionV3Factory {
+/// @title The interface for the Acorn V3 Factory
+interface IAcornV3Factory {
     event OwnerChanged(address indexed oldOwner, address indexed newOwner);
 
     event PoolCreated(

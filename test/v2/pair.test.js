@@ -5,14 +5,14 @@ const { deploy, artifactOf, expandTo18Decimals, MINIMUM_LIQUIDITY } = require('.
 
 async function fixture() {
   const [wallet, other] = await ethers.getSigners();
-  const factory = await deploy('HyperionV2Factory', [wallet.address], wallet);
+  const factory = await deploy('AcornV2Factory', [wallet.address], wallet);
 
   const tokenA = await deploy('TestSQRCTF1', [expandTo18Decimals(10000)], wallet);
   const tokenB = await deploy('TestSQRCTF1', [expandTo18Decimals(10000)], wallet);
 
   await factory.createPair(await tokenA.getAddress(), await tokenB.getAddress());
   const pair = await ethers.getContractAt(
-    artifactOf('HyperionV2Pair').abi,
+    artifactOf('AcornV2Pair').abi,
     await factory.getPair(await tokenA.getAddress(), await tokenB.getAddress()),
     wallet
   );
@@ -30,7 +30,7 @@ async function addLiquidity(pair, token0, token1, amount0, amount1, to) {
   await pair.mint(to);
 }
 
-describe('HyperionV2Pair', () => {
+describe('AcornV2Pair', () => {
   it('mints the geometric mean minus the locked minimum on first deposit', async () => {
     const { pair, token0, token1, wallet } = await loadFixture(fixture);
     const amount0 = expandTo18Decimals(1);
@@ -82,7 +82,7 @@ describe('HyperionV2Pair', () => {
       await token0.transfer(await pair.getAddress(), expandTo18Decimals(swapAmount));
 
       await expect(pair.swap(0, BigInt(expectedOutput) + 1n, wallet.address, '0x')).to.be.revertedWith(
-        'HyperionV2: K'
+        'AcornV2: K'
       );
       await pair.swap(0, BigInt(expectedOutput), wallet.address, '0x');
     });
@@ -172,13 +172,13 @@ describe('HyperionV2Pair', () => {
     await addLiquidity(pair, token0, token1, amount, amount, wallet.address);
 
     await expect(pair.swap(0, 0, wallet.address, '0x')).to.be.revertedWith(
-      'HyperionV2: INSUFFICIENT_OUTPUT_AMOUNT'
+      'AcornV2: INSUFFICIENT_OUTPUT_AMOUNT'
     );
     await expect(pair.swap(0, amount, wallet.address, '0x')).to.be.revertedWith(
-      'HyperionV2: INSUFFICIENT_LIQUIDITY'
+      'AcornV2: INSUFFICIENT_LIQUIDITY'
     );
     await expect(pair.swap(0, 1n, await token0.getAddress(), '0x')).to.be.revertedWith(
-      'HyperionV2: INVALID_TO'
+      'AcornV2: INVALID_TO'
     );
   });
 
@@ -202,7 +202,7 @@ describe('HyperionV2Pair', () => {
   it('refuses re-initialisation by anyone but the factory', async () => {
     const { pair, wallet } = await loadFixture(fixture);
     await expect(pair.initialize(wallet.address, wallet.address)).to.be.revertedWith(
-      'HyperionV2: FORBIDDEN'
+      'AcornV2: FORBIDDEN'
     );
   });
 });

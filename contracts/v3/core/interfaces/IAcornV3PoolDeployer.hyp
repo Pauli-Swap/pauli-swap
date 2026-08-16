@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma hyperion >=0.0;
 
-/// @title An interface for a contract that is capable of deploying Hyperion V3 pools
+/// @title An interface for a contract that is capable of deploying Acorn V3 pools
 /// @notice Keeps the pool's constructor free of arguments so that its init code
 /// hash stays constant, which is what makes off chain CREATE2 address derivation
 /// possible.
-interface IHyperionV3PoolDeployer {
+interface IAcornV3PoolDeployer {
     /// @notice Parameters transiently set during pool creation
     function parameters()
         external

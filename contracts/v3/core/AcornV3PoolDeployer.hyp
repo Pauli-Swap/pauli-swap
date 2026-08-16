@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma hyperion >=0.0;
 
-import {IHyperionV3PoolDeployer} from "./interfaces/IHyperionV3PoolDeployer.hyp";
-import {HyperionV3Pool} from "./HyperionV3Pool.hyp";
+import {IAcornV3PoolDeployer} from "./interfaces/IAcornV3PoolDeployer.hyp";
+import {AcornV3Pool} from "./AcornV3Pool.hyp";
 
-contract HyperionV3PoolDeployer is IHyperionV3PoolDeployer {
+contract AcornV3PoolDeployer is IAcornV3PoolDeployer {
     struct Parameters {
         address factory;
         address token0;
@@ -24,7 +24,7 @@ contract HyperionV3PoolDeployer is IHyperionV3PoolDeployer {
     {
         parameters =
             Parameters({factory: factory, token0: token0, token1: token1, fee: fee, tickSpacing: tickSpacing});
-        pool = address(new HyperionV3Pool{salt: keccak256(abi.encode(token0, token1, fee))}());
+        pool = address(new AcornV3Pool{salt: keccak256(abi.encode(token0, token1, fee))}());
         delete parameters;
     }
 }

@@ -1,5 +1,5 @@
 {
-  "name": "hyperion-swap",
+  "name": "acorn-swap",
   "version": "0.1.0",
   "private": true,
   "description": "Uniswap V2 and V3 ported to Hyperion for the QRL Zond testnet v2",

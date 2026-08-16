@@ -1,13 +1,13 @@
-# Hyperion Swap
+# AcornSwap
 
 Uniswap V2 and V3 ported to [Hyperion](https://github.com/theQRL/hyperion), the
 QRL fork of Solidity, targeting the **QRL Zond testnet v2** (`chainId` 1337).
 
 Two independent AMMs:
 
-- **Hyperion V2** — constant product pairs, `HyperionV2Factory` +
-  `HyperionV2Router02`. **Deployed to testnet.**
-- **Hyperion V3** — concentrated liquidity, `HyperionV3Factory` + `SwapRouter` +
+- **Acorn V2** — constant product pairs, `AcornV2Factory` +
+  `AcornV2Router02`. **Deployed to testnet.**
+- **Acorn V3** — concentrated liquidity, `AcornV3Factory` + `SwapRouter` +
   `Quoter`. Built and tested, **not deployed**: the wallet RPC proxy caps request
   bodies below the size of the V3 factory deployment. Waiting on an endpoint
   without that cap; see [Testnet addresses](#testnet-addresses).
@@ -31,9 +31,9 @@ not.
 
 ```
 contracts/
-  v2/core/          HyperionV2Factory, HyperionV2Pair, HyperionV2SQRCTF1
-  v2/periphery/     HyperionV2Router02, HyperionV2Library, TransferHelper
-  v3/core/          HyperionV3Factory, HyperionV3Pool, math libraries
+  v2/core/          AcornV2Factory, AcornV2Pair, AcornV2SQRCTF1
+  v2/periphery/     AcornV2Router02, AcornV2Library, TransferHelper
+  v3/core/          AcornV3Factory, AcornV3Pool, math libraries
   v3/periphery/     SwapRouter, Quoter, PoolAddress, Path
   tokens/           WQRL
   test/             fixtures and library probes, not for deployment
@@ -73,12 +73,12 @@ against a Zond node.
 | Contract | Address |
 | --- | --- |
 | WQRL (pre-existing) | `Q823b2FAeEbC9e1EE8e20454201502ef0679cC4AE` |
-| HyperionV2Factory | `Q2755080D68dc856942AA54bCE11fC2e5fE329263` |
-| HyperionV2Router02 | `Q0c62B46e3C36C0982eE0343FFB91471E10fd63E3` |
+| AcornV2Factory | `QA19FA6B49A10F1B57E303ECE95eF21acE640d312` |
+| AcornV2Router02 | `QE89663F7f2a4955A82a2852D1624f51569080916` |
 
-- V2 pair init code hash: `0x3bb56bfce494ffc5e0c9b95766b2e37b1d014ad2b5dc40995c6faf1cbc9deba7`
+- V2 pair init code hash: `0x5fb17eaa6a423644c910c64d7a3c99f47cd34f3c167089b5b8016358ee99c484`
 
-> **V3 is not deployed.** `HyperionV3Factory` has 24,498 bytes of init code even at
+> **V3 is not deployed.** `AcornV3Factory` has 24,498 bytes of init code even at
 > `runs: 1`, because it embeds the pool's init code. The wallet RPC proxy
 > (`qrlwallet.com/api/qrl-rpc/testnet`) caps a request body at ~51 KB, and an
 > ML-DSA-87 signature plus public key already costs ~7.3 KB of that, leaving room
@@ -93,6 +93,17 @@ against a Zond node.
 Addresses are written by `scripts/deploy.js` into `deployments/<network>.json`
 and rendered here by `npm run addresses`. The deploy script runs that step
 itself, so this section never has to be edited by hand.
+
+**Superseded — do not use.** An earlier deployment carried the working name
+Hyperion Swap. Renaming to AcornSwap changed the contract names, the revert
+strings and the LP token symbol, all of which live in the pair's bytecode, so
+`PAIR_INIT_CODE_HASH` changed and the old factory could no longer be addressed
+by the new router. It held no pairs and no liquidity when it was replaced.
+
+| Contract | Address |
+| --- | --- |
+| `HyperionV2Factory` | `Q2755080D68dc856942AA54bCE11fC2e5fE329263` |
+| `HyperionV2Router02` | `Q0c62B46e3C36C0982eE0343FFB91471E10fd63E3` |
 
 ## Deploying
 
@@ -174,13 +185,13 @@ deployable init code through this endpoint is about **18 KB**:
 
 | Contract | init code | fits |
 | --- | --- | --- |
-| `HyperionV2Factory` | 12,442 | yes |
-| `HyperionV2Router02` (200 runs) | 15,328 | yes |
+| `AcornV2Factory` | 12,442 | yes |
+| `AcornV2Router02` (200 runs) | 15,328 | yes |
 | `SwapRouter` | 8,174 | yes |
 | `Quoter` | 4,181 | yes |
-| `HyperionV3Factory` | 24,498 even at `runs: 1` | **no** |
+| `AcornV3Factory` | 24,498 even at `runs: 1` | **no** |
 
-`HyperionV3Factory` embeds the pool's init code, so no optimizer setting brings
+`AcornV3Factory` embeds the pool's init code, so no optimizer setting brings
 it under the cap. Deploying V3 needs either a `gqrl` node you control (no proxy,
 no body cap) or splitting the pool deployer out of the factory — which would
 change what `PoolAddress.computeAddress` derives from and is a real design
@@ -207,5 +218,5 @@ normalises to `Q`.
 
 Token standard names follow QRL's: **SQRC-TF1** is the fungible token standard
 (ERC-20's counterpart), which is why the V2 liquidity token is
-`HyperionV2SQRCTF1`. The ABI is unchanged — `transfer`, `approve`,
+`AcornV2SQRCTF1`. The ABI is unchanged — `transfer`, `approve`,
 `transferFrom`, `balanceOf`, `allowance`, plus `Transfer` and `Approval`.

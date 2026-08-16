@@ -13,7 +13,7 @@ const NOT_DEPLOYED =
 const PENDING_V2 = '> **V2 is not deployed.** Run `npm run deploy:v2`.';
 
 const PENDING_V3 =
-  '> **V3 is not deployed.** `HyperionV3Factory` has 24,498 bytes of init code even at\n' +
+  '> **V3 is not deployed.** `AcornV3Factory` has 24,498 bytes of init code even at\n' +
   '> `runs: 1`, because it embeds the pool\'s init code. The wallet RPC proxy\n' +
   '> (`qrlwallet.com/api/qrl-rpc/testnet`) caps a request body at ~51 KB, and an\n' +
   '> ML-DSA-87 signature plus public key already costs ~7.3 KB of that, leaving room\n' +
@@ -29,11 +29,11 @@ function tableFor(network, data) {
 
   if (data.wqrl) push('WQRL (pre-existing)', data.wqrl);
   if (data.v2) {
-    push('HyperionV2Factory', data.v2.factory);
-    push('HyperionV2Router02', data.v2.router02);
+    push('AcornV2Factory', data.v2.factory);
+    push('AcornV2Router02', data.v2.router02);
   }
   if (data.v3) {
-    push('HyperionV3Factory', data.v3.factory);
+    push('AcornV3Factory', data.v3.factory);
     push('SwapRouter (V3)', data.v3.swapRouter);
     push('Quoter (V3)', data.v3.quoter);
   }

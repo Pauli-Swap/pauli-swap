@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma hyperion >=0.0;
 
-import {IHyperionV2Callee} from "../v2/core/interfaces/IHyperionV2Callee.hyp";
-import {IHyperionV2Pair} from "../v2/core/interfaces/IHyperionV2Pair.hyp";
-import {IHyperionV2SQRCTF1} from "../v2/core/interfaces/IHyperionV2SQRCTF1.hyp";
+import {IAcornV2Callee} from "../v2/core/interfaces/IAcornV2Callee.hyp";
+import {IAcornV2Pair} from "../v2/core/interfaces/IAcornV2Pair.hyp";
+import {IAcornV2SQRCTF1} from "../v2/core/interfaces/IAcornV2SQRCTF1.hyp";
 
 /// @notice Exercises the V2 flash swap path: borrow one token out of the pair
 /// and repay in the callback with the other token plus the 0.3% fee.
-contract HyperionV2FlashBorrower is IHyperionV2Callee {
+contract AcornV2FlashBorrower is IAcornV2Callee {
     /// @dev Set by the test to make the callback underpay, which must trip the
     /// pair's K invariant.
     bool public repayShort;
@@ -17,12 +17,12 @@ contract HyperionV2FlashBorrower is IHyperionV2Callee {
     }
 
     function flashSwap(address pair, uint256 amount0Out, uint256 amount1Out) external {
-        IHyperionV2Pair(pair).swap(amount0Out, amount1Out, address(this), abi.encode(msg.sender));
+        IAcornV2Pair(pair).swap(amount0Out, amount1Out, address(this), abi.encode(msg.sender));
     }
 
-    function hyperionV2Call(address, uint256 amount0, uint256 amount1, bytes calldata data) external {
+    function acornV2Call(address, uint256 amount0, uint256 amount1, bytes calldata data) external {
         address payer = abi.decode(data, (address));
-        IHyperionV2Pair pair = IHyperionV2Pair(msg.sender);
+        IAcornV2Pair pair = IAcornV2Pair(msg.sender);
 
         (uint112 reserve0, uint112 reserve1,) = pair.getReserves();
         address tokenIn = amount0 > 0 ? pair.token1() : pair.token0();
@@ -36,6 +36,6 @@ contract HyperionV2FlashBorrower is IHyperionV2Callee {
 
         if (repayShort) amountIn -= 1;
 
-        IHyperionV2SQRCTF1(tokenIn).transferFrom(payer, msg.sender, amountIn);
+        IAcornV2SQRCTF1(tokenIn).transferFrom(payer, msg.sender, amountIn);
     }
 }

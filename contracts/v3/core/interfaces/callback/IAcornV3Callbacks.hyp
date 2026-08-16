@@ -1,0 +1,22 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+pragma hyperion >=0.0;
+
+/// @title Callback for IAcornV3PoolActions#mint
+interface IAcornV3MintCallback {
+    /// @notice Called to `msg.sender` after minting liquidity to a position
+    /// @dev The caller must be a AcornV3Pool deployed by the canonical factory
+    function acornV3MintCallback(uint256 amount0Owed, uint256 amount1Owed, bytes calldata data) external;
+}
+
+/// @title Callback for IAcornV3PoolActions#swap
+interface IAcornV3SwapCallback {
+    /// @notice Called to `msg.sender` after executing a swap
+    /// @dev Amounts are deltas: positive means the pool is owed that token
+    function acornV3SwapCallback(int256 amount0Delta, int256 amount1Delta, bytes calldata data) external;
+}
+
+/// @title Callback for IAcornV3PoolActions#flash
+interface IAcornV3FlashCallback {
+    /// @notice Called to `msg.sender` after transferring flash borrowed tokens
+    function acornV3FlashCallback(uint256 fee0, uint256 fee1, bytes calldata data) external;
+}

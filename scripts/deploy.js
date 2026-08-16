@@ -152,19 +152,19 @@ async function main() {
     // Deployment can stop part way through when a transaction exceeds the RPC
     // body limit, so an already deployed factory is reused rather than
     // duplicated. Its pair init code hash is checked below either way.
-    const factory = await reuseOrDeploy(web3, from, 'HyperionV2Factory', [feeToSetter], process.env.V2_FACTORY);
+    const factory = await reuseOrDeploy(web3, from, 'AcornV2Factory', [feeToSetter], process.env.V2_FACTORY);
     const router = await reuseOrDeploy(
       web3,
       from,
-      'HyperionV2Router02',
+      'AcornV2Router02',
       [factory.address, wqrl],
       process.env.V2_ROUTER
     );
 
-    // A mismatch means HyperionV2Library.PAIR_INIT_CODE_HASH is stale, and every
+    // A mismatch means AcornV2Library.PAIR_INIT_CODE_HASH is stale, and every
     // router call would silently target an address with no code.
     const onChain = await factory.contract.methods.pairCodeHash().call();
-    const expected = web3.utils.keccak256(artifactOf('HyperionV2Pair').bytecode);
+    const expected = web3.utils.keccak256(artifactOf('AcornV2Pair').bytecode);
     if (onChain.toLowerCase() !== expected.toLowerCase()) {
       throw new Error(`V2 pair init code hash mismatch: chain ${onChain} vs artifact ${expected}`);
     }
@@ -178,7 +178,7 @@ async function main() {
   }
 
   if (which === 'all' || which === 'v3') {
-    const factory = await deploy(web3, from, 'HyperionV3Factory', []);
+    const factory = await deploy(web3, from, 'AcornV3Factory', []);
     const router = await deploy(web3, from, 'SwapRouter', [factory.address, wqrl]);
     const quoter = await deploy(web3, from, 'Quoter', [factory.address, wqrl]);
 
@@ -186,7 +186,7 @@ async function main() {
       factory: factory.address,
       swapRouter: router.address,
       quoter: quoter.address,
-      poolInitCodeHash: web3.utils.keccak256(artifactOf('HyperionV3Pool').bytecode),
+      poolInitCodeHash: web3.utils.keccak256(artifactOf('AcornV3Pool').bytecode),
     };
   }
 

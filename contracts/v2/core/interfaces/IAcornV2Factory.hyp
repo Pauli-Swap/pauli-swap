@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma hyperion >=0.0;
 
-interface IHyperionV2Factory {
+interface IAcornV2Factory {
     event PairCreated(address indexed token0, address indexed token1, address pair, uint256 allPairsLength);
 
     function feeTo() external view returns (address);

@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma hyperion >=0.0;
 
-import {IHyperionV2SQRCTF1} from "./IHyperionV2SQRCTF1.hyp";
+import {IAcornV2SQRCTF1} from "./IAcornV2SQRCTF1.hyp";
 
-interface IHyperionV2Pair is IHyperionV2SQRCTF1 {
+interface IAcornV2Pair is IAcornV2SQRCTF1 {
     event Mint(address indexed sender, uint256 amount0, uint256 amount1);
     event Burn(address indexed sender, uint256 amount0, uint256 amount1, address indexed to);
     event Swap(

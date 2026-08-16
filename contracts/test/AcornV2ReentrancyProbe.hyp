@@ -1,0 +1,17 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+pragma hyperion >=0.0;
+
+import {IAcornV2Callee} from "../v2/core/interfaces/IAcornV2Callee.hyp";
+import {IAcornV2Pair} from "../v2/core/interfaces/IAcornV2Pair.hyp";
+
+/// @notice Calls back into the pair from inside the swap callback so the test
+/// can prove the `lock` modifier rejects reentrancy.
+contract AcornV2ReentrancyProbe is IAcornV2Callee {
+    function attack(address pair) external {
+        IAcornV2Pair(pair).swap(1, 0, address(this), abi.encode(uint256(1)));
+    }
+
+    function acornV2Call(address, uint256, uint256, bytes calldata) external {
+        IAcornV2Pair(msg.sender).sync();
+    }
+}

@@ -17,7 +17,7 @@ const ARTIFACTS = path.join(ROOT, 'build', 'hyperion');
 // a higher count trades size for gas. At 200 the factory has only ~150 bytes of
 // headroom, which is why the size check below is a build error rather than a
 // warning.
-// V2 core stays at Uniswap's run count because HyperionV2Pair's compiled init
+// V2 core stays at Uniswap's run count because AcornV2Pair's compiled init
 // code is hashed into PAIR_INIT_CODE_HASH; changing it would orphan an already
 // deployed factory. The periphery is free to shrink, and has to: the QRL wallet
 // RPC proxy caps a request body at ~51 KB, and an ML-DSA-87 signature plus

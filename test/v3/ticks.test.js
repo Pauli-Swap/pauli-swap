@@ -15,8 +15,8 @@ const getMaxTick = (spacing) => Math.floor(887272 / spacing) * spacing;
 async function fixture() {
   const [wallet, other] = await ethers.getSigners();
 
-  const factory = await deploy('HyperionV3Factory', [], wallet);
-  const caller = await deploy('HyperionV3PoolCaller', [], wallet);
+  const factory = await deploy('AcornV3Factory', [], wallet);
+  const caller = await deploy('AcornV3PoolCaller', [], wallet);
 
   let tokenA = await deploy('TestSQRCTF1', [expandTo18Decimals(1000000)], wallet);
   let tokenB = await deploy('TestSQRCTF1', [expandTo18Decimals(1000000)], wallet);
@@ -26,7 +26,7 @@ async function fixture() {
 
   await factory.createPool(await tokenA.getAddress(), await tokenB.getAddress(), FEE_MEDIUM);
   const pool = await ethers.getContractAt(
-    artifactOf('HyperionV3Pool').abi,
+    artifactOf('AcornV3Pool').abi,
     await factory.getPool(await tokenA.getAddress(), await tokenB.getAddress(), FEE_MEDIUM),
     wallet
   );
@@ -43,7 +43,7 @@ async function fixture() {
 // initialized tick and apply liquidityNet with the sign flipped for zeroForOne.
 // That path exercises every int24/uint24 conversion the port had to rewrite, so
 // it gets its own suite.
-describe('HyperionV3Pool tick crossing', () => {
+describe('AcornV3Pool tick crossing', () => {
   async function narrowPositions() {
     const ctx = await loadFixture(fixture);
     const { pool, caller, wallet } = ctx;
@@ -168,7 +168,7 @@ describe('HyperionV3Pool tick crossing', () => {
   });
 });
 
-describe('HyperionV3Pool oracle', () => {
+describe('AcornV3Pool oracle', () => {
   it('accumulates tickCumulative over elapsed time', async () => {
     const ctx = await loadFixture(fixture);
     const { pool, caller, wallet } = ctx;

@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma hyperion >=0.0;
 
-/// @title SQRC-TF1 interface of the Hyperion V2 liquidity token
+/// @title SQRC-TF1 interface of the Acorn V2 liquidity token
 /// @notice Mirrors Uniswap V2's IUniswapV2ERC20 minus the EIP-2612 `permit`
 /// surface, which cannot exist on Zond: the chain has no ecrecover precompile.
-interface IHyperionV2SQRCTF1 {
+interface IAcornV2SQRCTF1 {
     event Approval(address indexed owner, address indexed spender, uint256 value);
     event Transfer(address indexed from, address indexed to, uint256 value);
 

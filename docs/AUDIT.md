@@ -1,4 +1,4 @@
-# Hyperion Swap — port review against QRL Zond testnet v2
+# AcornSwap — port review against QRL Zond testnet v2
 
 Scope: the Uniswap V2 and V3 forks in `contracts/`, reviewed for correctness of
 the port and for fitness against the QRL Zond testnet v2 (`chainId` 1337).
@@ -36,8 +36,8 @@ secp256k1 recovery has nothing to recover. Consequences applied to the port:
 
 | Upstream feature | Status here |
 | --- | --- |
-| `UniswapV2ERC20.permit`, `DOMAIN_SEPARATOR`, `PERMIT_TYPEHASH`, `nonces` | Removed from `HyperionV2SQRCTF1` |
-| `UniswapV2Router02.removeLiquidity*WithPermit*` (3 entry points) | Removed from `HyperionV2Router02` |
+| `UniswapV2ERC20.permit`, `DOMAIN_SEPARATOR`, `PERMIT_TYPEHASH`, `nonces` | Removed from `AcornV2SQRCTF1` |
+| `UniswapV2Router02.removeLiquidity*WithPermit*` (3 entry points) | Removed from `AcornV2Router02` |
 | `SelfPermit` on the V3 router | Not inherited by `SwapRouter` |
 | `ERC721Permit` / `NonfungiblePositionManager.permit` | Not ported (see §4) |
 
@@ -77,7 +77,7 @@ normal operation rather than in an error case.
 
 Sites converted, each with the reason recorded in the source:
 
-- `HyperionV2Pair._update` — `timeElapsed` and both price accumulators. Without
+- `AcornV2Pair._update` — `timeElapsed` and both price accumulators. Without
   `unchecked` the pair reverts permanently once the accumulator wraps.
 - `Math.sqrt`, `UQ112x112.encode`.
 - `FullMath.mulDiv` — the entire 512 bit reconstruction. Also
@@ -90,7 +90,7 @@ Sites converted, each with the reason recorded in the source:
 - `SwapMath.computeSwapStep` — `uint256(-amountRemaining)`.
 - `Tick.getFeeGrowthInside` / `Tick.cross`, `Position.update`, the whole of
   `Oracle`, and the fee growth and protocol fee accumulators in
-  `HyperionV3Pool.swap` / `flash` / `burn`.
+  `AcornV3Pool.swap` / `flash` / `burn`.
 - `LiquidityMath.addDelta` — see §2.1, this one was caught by a test.
 
 `SafeMath` and `LowGasSafeMath` are therefore redundant. V2's is deleted; V3's
@@ -101,7 +101,7 @@ upstream.
 
 `go-zond/params/protocol_params.go` sets `MaxCodeSize = 24576` and
 `MaxInitCodeSize = 49152`, identical to Ethereum. `hypc` 0.0.2 produces larger
-output than `solc` 0.7.6 for the same sources, and `HyperionV3Factory` embeds the
+output than `solc` 0.7.6 for the same sources, and `AcornV3Factory` embeds the
 pool's init code:
 
 | optimizer runs | factory | pool |
@@ -117,7 +117,7 @@ The build uses **200 runs for all of `contracts/v3/`**, leaving the factory abou
 1. `scripts/compile.js` fails the build if any runtime exceeds `MAX_CODE_SIZE` or
    any init code exceeds `MAX_INIT_CODE_SIZE`.
 2. `poolCodeHash()` — a convenience getter added during the port — was removed
-   from `HyperionV3Factory` to recover bytes. `HyperionV2Factory.pairCodeHash()`
+   from `AcornV3Factory` to recover bytes. `AcornV2Factory.pairCodeHash()`
    is kept; V2 has ample room.
 
 Anyone adding code to the V3 pool or factory should expect to lower the run count
@@ -152,7 +152,7 @@ Fixed by wrapping both branches in `unchecked`. `test/v3/math.test.js` asserts
 
 ### 2.2 CREATE2 init code hashes were placeholders
 
-`HyperionV2Library.PAIR_INIT_CODE_HASH` and `PoolAddress.POOL_INIT_CODE_HASH`
+`AcornV2Library.PAIR_INIT_CODE_HASH` and `PoolAddress.POOL_INIT_CODE_HASH`
 are hardcoded constants in Uniswap. A stale value does not fail loudly: the
 router computes an address with no code and calls into nothing.
 
@@ -168,11 +168,11 @@ Handled by:
 - `scripts/deploy.js` re-checks the V2 hash against the live factory and aborts
   on mismatch.
 
-### 2.3 `HyperionV2Library.getAmountIn` had no reason string at the boundary
+### 2.3 `AcornV2Library.getAmountIn` had no reason string at the boundary
 
 Upstream reaches a division by zero when `amountOut == reserveOut`. Both
 versions revert, but upstream's gives a bare panic. An explicit
-`require(amountOut < reserveOut, "HyperionV2Library: INSUFFICIENT_LIQUIDITY")`
+`require(amountOut < reserveOut, "AcornV2Library: INSUFFICIENT_LIQUIDITY")`
 was added and marked in the source as a deviation.
 
 ---
@@ -188,7 +188,7 @@ What the suite actually pins:
 
 - **V2 pricing is bit exact against Uniswap.** Seven swap cases assert the exact
   output amount Uniswap V2 produces (e.g. 1 in, reserves 5/10 →
-  `1662497915624478906`) and that one wei more reverts with `HyperionV2: K`.
+  `1662497915624478906`) and that one wei more reverts with `AcornV2: K`.
 - **V3 tick math is exact.** `getSqrtRatioAtTick` is asserted against reference
   values cross checked with an independent big integer computation, plus
   tick → ratio → tick round trips across the full range and both boundary
@@ -221,27 +221,34 @@ Additionally pinned since the first revision:
   and `snapshotCumulativesInside`.
 - **`NoDelegateCall`**: `swap` and `observe` both fail when reached through a
   `delegatecall`.
-- **V2 flash swap** via `IHyperionV2Callee`, including a one wei underpayment
-  reverting with `HyperionV2: K`, and reserves matching balances afterwards.
+- **V2 flash swap** via `IAcornV2Callee`, including a one wei underpayment
+  reverting with `AcornV2: K`, and reserves matching balances afterwards.
 - **V2 reentrancy**: a nested call from inside the swap callback hits
-  `HyperionV2: LOCKED`.
+  `AcornV2: LOCKED`.
 - **V2 allowance semantics** (infinite vs finite) and the absence of any
   `permit` / `DOMAIN_SEPARATOR` / `nonces` entry in the pair ABI.
 
 ### Verified on the live testnet
 
-Hyperion V2 is deployed to QRL Zond testnet v2 (chainId 1337):
+Acorn V2 is deployed to QRL Zond testnet v2 (chainId 1337):
 
 | Contract | Address |
 | --- | --- |
 | WQRL (pre-existing, reused) | `Q823b2FAeEbC9e1EE8e20454201502ef0679cC4AE` |
-| `HyperionV2Factory` | `Q2755080D68dc856942AA54bCE11fC2e5fE329263` |
-| `HyperionV2Router02` | `Q0c62B46e3C36C0982eE0343FFB91471E10fd63E3` |
+| `AcornV2Factory` | `QA19FA6B49A10F1B57E303ECE95eF21acE640d312` |
+| `AcornV2Router02` | `QE89663F7f2a4955A82a2852D1624f51569080916` |
+
+An earlier deployment under the working name Hyperion Swap
+(`Q2755080D…329263` / `Q0c62B46e…fd63E3`) is superseded and must not be used.
+The rename changed contract names, revert strings and the LP token symbol, all
+of which sit in the pair's bytecode, so `PAIR_INIT_CODE_HASH` moved from
+`0x3bb56bfc…deba7` to `0x5fb17eaa…9c484` and the old factory became
+unaddressable by the new router. It held no pairs and no liquidity.
 
 `npm run verify` reads back, against the deployed contracts:
 
 - `factory.pairCodeHash()` equals the compiled artifact hash
-  (`0x3bb56bfc…deba7`), so the router's `pairFor` derives addresses the factory
+  (`0x5fb17eaa…9c484`), so the router's `pairFor` derives addresses the factory
   will actually deploy to. This is the single check that would silently break
   every router entry point.
 - `router.factory()` and `router.WQRL()` point at the intended contracts.
@@ -302,14 +309,14 @@ through this endpoint is therefore about **18,250 bytes**:
 
 | Contract | init code | fits |
 | --- | --- | --- |
-| `HyperionV2Factory` | 12,442 | yes |
-| `HyperionV2Router02` at 999999 runs | 20,428 | no |
-| `HyperionV2Router02` at 200 runs | 15,328 | yes |
+| `AcornV2Factory` | 12,442 | yes |
+| `AcornV2Router02` at 999999 runs | 20,428 | no |
+| `AcornV2Router02` at 200 runs | 15,328 | yes |
 | `SwapRouter` | 8,174 | yes |
 | `Quoter` | 4,181 | yes |
-| `HyperionV3Factory` at `runs: 1` | 24,498 | **no** |
+| `AcornV3Factory` at `runs: 1` | 24,498 | **no** |
 
-`HyperionV3Factory` embeds the pool's init code, so no optimizer setting brings
+`AcornV3Factory` embeds the pool's init code, so no optimizer setting brings
 it under the cap.
 
 **V3 deployment is therefore parked on infrastructure, not on the code.** The
@@ -366,8 +373,8 @@ because the available RPC endpoint answers no state queries.
 | `PeripheryPaymentsWithFee` | Optional fee-on-swap; not required |
 
 Without a position manager, V3 liquidity must be provided by calling
-`HyperionV3Pool.mint` from a contract that implements
-`hyperionV3MintCallback`. `contracts/test/HyperionV3PoolCaller.hyp` shows the
+`AcornV3Pool.mint` from a contract that implements
+`acornV3MintCallback`. `contracts/test/AcornV3PoolCaller.hyp` shows the
 shape but is a test fixture, not production code.
 
 ---
@@ -382,7 +389,7 @@ describing addresses as `Q` followed by 128 hex characters. The released
 compiler this port is built with is on the 20-byte `Z` model — `hypc` 0.0.2
 rejects both `Q`+128 and `Z`+128 literals and has no `uint512` type. If the
 testnet moves to 64-byte addresses, `CREATE2` derivation, `abi.encodePacked`
-packing in `PoolAddress` / `HyperionV2Library` / `Position.get`, and the 20-byte
+packing in `PoolAddress` / `AcornV2Library` / `Position.get`, and the 20-byte
 assumption in `BytesLib.toAddress` and the swap `Path` encoding all break at
 once. Re-verify against the toolchain before any mainnet consideration.
 

@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma hyperion >=0.0;
 
-import {IHyperionV2Factory} from "./interfaces/IHyperionV2Factory.hyp";
-import {IHyperionV2Pair} from "./interfaces/IHyperionV2Pair.hyp";
-import {HyperionV2Pair} from "./HyperionV2Pair.hyp";
+import {IAcornV2Factory} from "./interfaces/IAcornV2Factory.hyp";
+import {IAcornV2Pair} from "./interfaces/IAcornV2Pair.hyp";
+import {AcornV2Pair} from "./AcornV2Pair.hyp";
 
-contract HyperionV2Factory is IHyperionV2Factory {
+contract AcornV2Factory is IAcornV2Factory {
     address public feeTo;
     address public feeToSetter;
 
@@ -21,25 +21,25 @@ contract HyperionV2Factory is IHyperionV2Factory {
     }
 
     /// @notice Deterministic CREATE2 address, so off chain code can derive a
-    /// pair address without a call. Any change to HyperionV2Pair bytecode or to
+    /// pair address without a call. Any change to AcornV2Pair bytecode or to
     /// the optimizer settings changes this value and must be mirrored in
-    /// HyperionV2Library.PAIR_INIT_CODE_HASH.
+    /// AcornV2Library.PAIR_INIT_CODE_HASH.
     function pairCodeHash() external pure returns (bytes32) {
-        return keccak256(type(HyperionV2Pair).creationCode);
+        return keccak256(type(AcornV2Pair).creationCode);
     }
 
     function createPair(address tokenA, address tokenB) external returns (address pair) {
-        require(tokenA != tokenB, "HyperionV2: IDENTICAL_ADDRESSES");
+        require(tokenA != tokenB, "AcornV2: IDENTICAL_ADDRESSES");
         (address token0, address token1) = tokenA < tokenB ? (tokenA, tokenB) : (tokenB, tokenA);
-        require(token0 != address(0), "HyperionV2: ZERO_ADDRESS");
-        require(getPair[token0][token1] == address(0), "HyperionV2: PAIR_EXISTS");
-        bytes memory bytecode = type(HyperionV2Pair).creationCode;
+        require(token0 != address(0), "AcornV2: ZERO_ADDRESS");
+        require(getPair[token0][token1] == address(0), "AcornV2: PAIR_EXISTS");
+        bytes memory bytecode = type(AcornV2Pair).creationCode;
         bytes32 salt = keccak256(abi.encodePacked(token0, token1));
         assembly {
             pair := create2(0, add(bytecode, 32), mload(bytecode), salt)
         }
-        require(pair != address(0), "HyperionV2: CREATE2_FAILED");
-        IHyperionV2Pair(pair).initialize(token0, token1);
+        require(pair != address(0), "AcornV2: CREATE2_FAILED");
+        IAcornV2Pair(pair).initialize(token0, token1);
         getPair[token0][token1] = pair;
         getPair[token1][token0] = pair;
         allPairs.push(pair);
@@ -47,12 +47,12 @@ contract HyperionV2Factory is IHyperionV2Factory {
     }
 
     function setFeeTo(address _feeTo) external {
-        require(msg.sender == feeToSetter, "HyperionV2: FORBIDDEN");
+        require(msg.sender == feeToSetter, "AcornV2: FORBIDDEN");
         feeTo = _feeTo;
     }
 
     function setFeeToSetter(address _feeToSetter) external {
-        require(msg.sender == feeToSetter, "HyperionV2: FORBIDDEN");
+        require(msg.sender == feeToSetter, "AcornV2: FORBIDDEN");
         feeToSetter = _feeToSetter;
     }
 }

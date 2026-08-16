@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma hyperion >=0.0;
 
-import {IHyperionV3Factory} from "./interfaces/IHyperionV3Factory.hyp";
-import {HyperionV3PoolDeployer} from "./HyperionV3PoolDeployer.hyp";
-import {HyperionV3Pool} from "./HyperionV3Pool.hyp";
+import {IAcornV3Factory} from "./interfaces/IAcornV3Factory.hyp";
+import {AcornV3PoolDeployer} from "./AcornV3PoolDeployer.hyp";
+import {AcornV3Pool} from "./AcornV3Pool.hyp";
 import {NoDelegateCall} from "./NoDelegateCall.hyp";
 
-/// @title Canonical Hyperion V3 factory
-/// @notice Deploys Hyperion V3 pools and manages ownership and control over pool
+/// @title Canonical Acorn V3 factory
+/// @notice Deploys Acorn V3 pools and manages ownership and control over pool
 /// protocol fees
-contract HyperionV3Factory is IHyperionV3Factory, HyperionV3PoolDeployer, NoDelegateCall {
+contract AcornV3Factory is IAcornV3Factory, AcornV3PoolDeployer, NoDelegateCall {
     address public owner;
 
     mapping(uint24 => int24) public feeAmountTickSpacing;
