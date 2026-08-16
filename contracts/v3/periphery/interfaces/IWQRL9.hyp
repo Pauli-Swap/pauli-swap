@@ -1,0 +1,13 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+pragma hyperion >=0.0;
+
+import {ISQRCTF1Minimal} from "../../core/interfaces/ISQRCTF1Minimal.hyp";
+
+/// @title Interface for WQRL, the wrapped native Quanta
+interface IWQRL9 is ISQRCTF1Minimal {
+    /// @notice Wraps the sent Quanta into WQRL
+    function deposit() external payable;
+
+    /// @notice Unwraps WQRL back into Quanta
+    function withdraw(uint256) external;
+}

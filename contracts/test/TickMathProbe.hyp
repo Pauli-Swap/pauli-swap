@@ -1,0 +1,63 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+pragma hyperion >=0.0;
+
+import {TickMath} from "../v3/core/libraries/TickMath.hyp";
+import {FullMath} from "../v3/core/libraries/FullMath.hyp";
+import {SqrtPriceMath} from "../v3/core/libraries/SqrtPriceMath.hyp";
+import {LiquidityMath} from "../v3/core/libraries/LiquidityMath.hyp";
+
+/// @notice Exposes the internal V3 math libraries so their ported behaviour can
+/// be compared against the values Uniswap V3 produces.
+contract TickMathProbe {
+    function getSqrtRatioAtTick(int24 tick) external pure returns (uint160) {
+        return TickMath.getSqrtRatioAtTick(tick);
+    }
+
+    function getTickAtSqrtRatio(uint160 sqrtPriceX96) external pure returns (int24) {
+        return TickMath.getTickAtSqrtRatio(sqrtPriceX96);
+    }
+
+    function minTick() external pure returns (int24) {
+        return TickMath.MIN_TICK;
+    }
+
+    function maxTick() external pure returns (int24) {
+        return TickMath.MAX_TICK;
+    }
+
+    function minSqrtRatio() external pure returns (uint160) {
+        return TickMath.MIN_SQRT_RATIO;
+    }
+
+    function maxSqrtRatio() external pure returns (uint160) {
+        return TickMath.MAX_SQRT_RATIO;
+    }
+
+    function mulDiv(uint256 a, uint256 b, uint256 denominator) external pure returns (uint256) {
+        return FullMath.mulDiv(a, b, denominator);
+    }
+
+    function mulDivRoundingUp(uint256 a, uint256 b, uint256 denominator) external pure returns (uint256) {
+        return FullMath.mulDivRoundingUp(a, b, denominator);
+    }
+
+    function getAmount0Delta(uint160 a, uint160 b, uint128 liquidity, bool roundUp)
+        external
+        pure
+        returns (uint256)
+    {
+        return SqrtPriceMath.getAmount0Delta(a, b, liquidity, roundUp);
+    }
+
+    function getAmount1Delta(uint160 a, uint160 b, uint128 liquidity, bool roundUp)
+        external
+        pure
+        returns (uint256)
+    {
+        return SqrtPriceMath.getAmount1Delta(a, b, liquidity, roundUp);
+    }
+
+    function addDelta(uint128 x, int128 y) external pure returns (uint128) {
+        return LiquidityMath.addDelta(x, y);
+    }
+}

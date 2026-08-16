@@ -1,0 +1,32 @@
+{
+  "name": "hyperion-swap",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Uniswap V2 and V3 ported to Hyperion for the QRL Zond testnet v2",
+  "license": "GPL-3.0-or-later",
+  "scripts": {
+    "compile": "node scripts/compile.js",
+    "initcodehash": "node scripts/init-code-hash.js",
+    "build": "npm run compile && npm run initcodehash && npm run compile",
+    "test": "npm run compile && hardhat test",
+    "test:only": "hardhat test",
+    "addresses": "node scripts/write-addresses.js",
+    "account": "node scripts/account.js",
+    "deploy": "node scripts/deploy.js",
+    "deploy:v2": "cross-env DEPLOY=v2 node scripts/deploy.js",
+    "deploy:v3": "cross-env DEPLOY=v3 node scripts/deploy.js",
+    "clean": "node -e \"require('fs').rmSync('build',{recursive:true,force:true});require('fs').rmSync('cache',{recursive:true,force:true})\"",
+    "verify": "node scripts/verify.mjs"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "@theqrl/hypc": "^0.0.2",
+    "@theqrl/qrl-contracts": "^0.1.0",
+    "cross-env": "^7.0.3",
+    "dotenv": "^16.4.5",
+    "hardhat": "^2.22.0"
+  },
+  "dependencies": {
+    "@theqrl/web3": "1.0.1"
+  }
+}

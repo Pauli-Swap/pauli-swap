@@ -1,0 +1,31 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+pragma hyperion >=0.0;
+
+/// @notice Delegatecalls into a pool so the test can prove noDelegateCall
+/// actually rejects the borrowed execution context.
+contract NoDelegateCallProbe {
+    function delegateSwap(
+        address pool,
+        address recipient,
+        bool zeroForOne,
+        int256 amountSpecified,
+        uint160 sqrtPriceLimitX96
+    ) external returns (bool success) {
+        (success,) = pool.delegatecall(
+            abi.encodeWithSignature(
+                "swap(address,bool,int256,uint160,bytes)",
+                recipient,
+                zeroForOne,
+                amountSpecified,
+                sqrtPriceLimitX96,
+                new bytes(0)
+            )
+        );
+    }
+
+    function delegateObserve(address pool) external returns (bool success) {
+        uint32[] memory secondsAgos = new uint32[](1);
+        secondsAgos[0] = 0;
+        (success,) = pool.delegatecall(abi.encodeWithSignature("observe(uint32[])", secondsAgos));
+    }
+}

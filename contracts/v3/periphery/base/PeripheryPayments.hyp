@@ -1,0 +1,48 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+pragma hyperion >=0.0;
+
+import {ISQRCTF1Minimal} from "../../core/interfaces/ISQRCTF1Minimal.hyp";
+import {IWQRL9} from "../interfaces/IWQRL9.hyp";
+import {TransferHelper} from "../libraries/TransferHelper.hyp";
+import {PeripheryImmutableState} from "./PeripheryImmutableState.hyp";
+
+abstract contract PeripheryPayments is PeripheryImmutableState {
+    receive() external payable {
+        require(msg.sender == WQRL9, "Not WQRL9");
+    }
+
+    function unwrapWQRL9(uint256 amountMinimum, address recipient) public payable {
+        uint256 balanceWQRL9 = IWQRL9(WQRL9).balanceOf(address(this));
+        require(balanceWQRL9 >= amountMinimum, "Insufficient WQRL9");
+
+        if (balanceWQRL9 > 0) {
+            IWQRL9(WQRL9).withdraw(balanceWQRL9);
+            TransferHelper.safeTransferQRL(recipient, balanceWQRL9);
+        }
+    }
+
+    function sweepToken(address token, uint256 amountMinimum, address recipient) public payable {
+        uint256 balanceToken = ISQRCTF1Minimal(token).balanceOf(address(this));
+        require(balanceToken >= amountMinimum, "Insufficient token");
+
+        if (balanceToken > 0) {
+            TransferHelper.safeTransfer(token, recipient, balanceToken);
+        }
+    }
+
+    function refundQRL() external payable {
+        if (address(this).balance > 0) TransferHelper.safeTransferQRL(msg.sender, address(this).balance);
+    }
+
+    function pay(address token, address payer, address recipient, uint256 value) internal {
+        if (token == WQRL9 && address(this).balance >= value) {
+            // Wrap only what is needed to pay.
+            IWQRL9(WQRL9).deposit{value: value}();
+            IWQRL9(WQRL9).transfer(recipient, value);
+        } else if (payer == address(this)) {
+            TransferHelper.safeTransfer(token, recipient, value);
+        } else {
+            TransferHelper.safeTransferFrom(token, payer, recipient, value);
+        }
+    }
+}

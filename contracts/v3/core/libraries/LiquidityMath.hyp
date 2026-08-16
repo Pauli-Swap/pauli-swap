@@ -1,0 +1,21 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+pragma hyperion >=0.0;
+
+/// @title Math library for liquidity
+library LiquidityMath {
+    /// @notice Add a signed liquidity delta to liquidity and revert if it
+    /// overflows or underflows
+    function addDelta(uint128 x, int128 y) internal pure returns (uint128 z) {
+        // Both branches must wrap so that the require, not a panic, reports the
+        // failure; upstream relies on Solidity 0.7 not checking these.
+        unchecked {
+            if (y < 0) {
+                // -y is taken on the widened int256 so that y == type(int128).min
+                // negates without overflowing, matching upstream's uint128(-y).
+                require((z = x - uint128(uint256(-int256(y)))) < x, "LS");
+            } else {
+                require((z = x + uint128(uint256(int256(y)))) >= x, "LA");
+            }
+        }
+    }
+}

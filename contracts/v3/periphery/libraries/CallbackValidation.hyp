@@ -1,0 +1,28 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+pragma hyperion >=0.0;
+
+import {IHyperionV3Pool} from "../../core/interfaces/IHyperionV3Pool.hyp";
+import {PoolAddress} from "./PoolAddress.hyp";
+
+/// @notice Provides validation for callbacks from Hyperion V3 pools
+library CallbackValidation {
+    function verifyCallback(address factory, address tokenA, address tokenB, uint24 fee)
+        internal
+        view
+        returns (IHyperionV3Pool pool)
+    {
+        return verifyCallback(factory, PoolAddress.getPoolKey(tokenA, tokenB, fee));
+    }
+
+    /// @dev Reverts unless msg.sender is the pool the key derives to, which is
+    /// what stops an arbitrary contract from calling the swap callback and
+    /// draining an approved balance.
+    function verifyCallback(address factory, PoolAddress.PoolKey memory poolKey)
+        internal
+        view
+        returns (IHyperionV3Pool pool)
+    {
+        pool = IHyperionV3Pool(PoolAddress.computeAddress(factory, poolKey));
+        require(msg.sender == address(pool));
+    }
+}

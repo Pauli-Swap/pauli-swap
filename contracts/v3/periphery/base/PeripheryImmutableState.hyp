@@ -1,0 +1,13 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+pragma hyperion >=0.0;
+
+/// @title Immutable state used by periphery contracts
+abstract contract PeripheryImmutableState {
+    address public immutable factory;
+    address public immutable WQRL9;
+
+    constructor(address _factory, address _WQRL9) {
+        factory = _factory;
+        WQRL9 = _WQRL9;
+    }
+}

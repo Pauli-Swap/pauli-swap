@@ -1,0 +1,10 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+pragma hyperion >=0.0;
+
+import {HyperionV2SQRCTF1} from "../v2/core/HyperionV2SQRCTF1.hyp";
+
+contract TestSQRCTF1 is HyperionV2SQRCTF1 {
+    constructor(uint256 totalSupply_) {
+        _mint(msg.sender, totalSupply_);
+    }
+}

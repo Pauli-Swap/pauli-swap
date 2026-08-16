@@ -1,0 +1,12 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+pragma hyperion >=0.0;
+
+interface IWQRL {
+    function deposit() external payable;
+
+    function transfer(address to, uint256 value) external returns (bool);
+
+    function withdraw(uint256 value) external;
+
+    function balanceOf(address owner) external view returns (uint256);
+}

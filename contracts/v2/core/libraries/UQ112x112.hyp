@@ -1,0 +1,19 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+pragma hyperion >=0.0;
+
+/// @title Binary fixed point number in 112.112 layout
+/// @dev range [0, 2**112 - 1], resolution 1 / 2**112
+library UQ112x112 {
+    uint224 private constant Q112 = 2 ** 112;
+
+    /// @dev Never overflows: the caller only ever encodes a uint112.
+    function encode(uint112 y) internal pure returns (uint224 z) {
+        unchecked {
+            z = uint224(y) * Q112;
+        }
+    }
+
+    function uqdiv(uint224 x, uint112 y) internal pure returns (uint224 z) {
+        z = x / uint224(y);
+    }
+}

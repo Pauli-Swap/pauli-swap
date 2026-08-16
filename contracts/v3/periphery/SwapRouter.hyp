@@ -1,0 +1,212 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+pragma hyperion >=0.0;
+
+import {SafeCast} from "../core/libraries/SafeCast.hyp";
+import {TickMath} from "../core/libraries/TickMath.hyp";
+import {IHyperionV3Pool} from "../core/interfaces/IHyperionV3Pool.hyp";
+import {ISwapRouter} from "./interfaces/ISwapRouter.hyp";
+import {PeripheryImmutableState} from "./base/PeripheryImmutableState.hyp";
+import {PeripheryValidation} from "./base/PeripheryValidation.hyp";
+import {PeripheryPayments} from "./base/PeripheryPayments.hyp";
+import {Multicall} from "./base/Multicall.hyp";
+import {Path} from "./libraries/Path.hyp";
+import {PoolAddress} from "./libraries/PoolAddress.hyp";
+import {CallbackValidation} from "./libraries/CallbackValidation.hyp";
+
+/// @title Hyperion V3 Swap Router
+/// @notice Router for stateless execution of swaps against Hyperion V3
+/// @dev Port of Uniswap's SwapRouter. SelfPermit is not inherited: EIP-2612
+/// needs ecrecover, which Zond does not provide, so callers must approve the
+/// router in a separate transaction.
+contract SwapRouter is ISwapRouter, PeripheryImmutableState, PeripheryValidation, PeripheryPayments, Multicall {
+    using Path for bytes;
+    using SafeCast for uint256;
+
+    /// @dev Placeholder for amountInCached, because the computed amount in for
+    /// an exact output swap can never actually be this value.
+    uint256 private constant DEFAULT_AMOUNT_IN_CACHED = type(uint256).max;
+
+    /// @dev Used to return the computed amount in for an exact output swap out
+    /// of the nested callback frames.
+    uint256 private amountInCached = DEFAULT_AMOUNT_IN_CACHED;
+
+    constructor(address _factory, address _WQRL9) PeripheryImmutableState(_factory, _WQRL9) {}
+
+    function getPool(address tokenA, address tokenB, uint24 fee) private view returns (IHyperionV3Pool) {
+        return IHyperionV3Pool(PoolAddress.computeAddress(factory, PoolAddress.getPoolKey(tokenA, tokenB, fee)));
+    }
+
+    struct SwapCallbackData {
+        bytes path;
+        address payer;
+    }
+
+    function hyperionV3SwapCallback(int256 amount0Delta, int256 amount1Delta, bytes calldata _data) external {
+        require(amount0Delta > 0 || amount1Delta > 0);
+        SwapCallbackData memory data = abi.decode(_data, (SwapCallbackData));
+        (address tokenIn, address tokenOut, uint24 fee) = data.path.decodeFirstPool();
+        CallbackValidation.verifyCallback(factory, tokenIn, tokenOut, fee);
+
+        (bool isExactInput, uint256 amountToPay) = amount0Delta > 0
+            ? (tokenIn < tokenOut, uint256(amount0Delta))
+            : (tokenOut < tokenIn, uint256(amount1Delta));
+        if (isExactInput) {
+            pay(tokenIn, data.payer, msg.sender, amountToPay);
+        } else {
+            if (data.path.hasMultiplePools()) {
+                data.path = data.path.skipToken();
+                exactOutputInternal(amountToPay, msg.sender, 0, data);
+            } else {
+                amountInCached = amountToPay;
+                // Exact output swaps run the path in reverse.
+                tokenIn = tokenOut;
+                pay(tokenIn, data.payer, msg.sender, amountToPay);
+            }
+        }
+    }
+
+    function exactInputInternal(
+        uint256 amountIn,
+        address recipient,
+        uint160 sqrtPriceLimitX96,
+        SwapCallbackData memory data
+    ) private returns (uint256 amountOut) {
+        if (recipient == address(0)) recipient = address(this);
+
+        (address tokenIn, address tokenOut, uint24 fee) = data.path.decodeFirstPool();
+
+        bool zeroForOne = tokenIn < tokenOut;
+
+        (int256 amount0, int256 amount1) = getPool(tokenIn, tokenOut, fee).swap(
+            recipient,
+            zeroForOne,
+            amountIn.toInt256(),
+            sqrtPriceLimitX96 == 0
+                ? (zeroForOne ? TickMath.MIN_SQRT_RATIO + 1 : TickMath.MAX_SQRT_RATIO - 1)
+                : sqrtPriceLimitX96,
+            abi.encode(data)
+        );
+
+        unchecked {
+            return uint256(-(zeroForOne ? amount1 : amount0));
+        }
+    }
+
+    function exactInputSingle(ExactInputSingleParams calldata params)
+        external
+        payable
+        checkDeadline(params.deadline)
+        returns (uint256 amountOut)
+    {
+        amountOut = exactInputInternal(
+            params.amountIn,
+            params.recipient,
+            params.sqrtPriceLimitX96,
+            SwapCallbackData({
+                path: abi.encodePacked(params.tokenIn, params.fee, params.tokenOut),
+                payer: msg.sender
+            })
+        );
+        require(amountOut >= params.amountOutMinimum, "Too little received");
+    }
+
+    function exactInput(ExactInputParams memory params)
+        external
+        payable
+        checkDeadline(params.deadline)
+        returns (uint256 amountOut)
+    {
+        address payer = msg.sender;
+
+        while (true) {
+            bool hasMultiplePools = params.path.hasMultiplePools();
+
+            params.amountIn = exactInputInternal(
+                params.amountIn,
+                hasMultiplePools ? address(this) : params.recipient,
+                0,
+                SwapCallbackData({path: params.path.getFirstPool(), payer: payer})
+            );
+
+            if (hasMultiplePools) {
+                payer = address(this);
+                params.path = params.path.skipToken();
+            } else {
+                amountOut = params.amountIn;
+                break;
+            }
+        }
+
+        require(amountOut >= params.amountOutMinimum, "Too little received");
+    }
+
+    function exactOutputInternal(
+        uint256 amountOut,
+        address recipient,
+        uint160 sqrtPriceLimitX96,
+        SwapCallbackData memory data
+    ) private returns (uint256 amountIn) {
+        if (recipient == address(0)) recipient = address(this);
+
+        (address tokenOut, address tokenIn, uint24 fee) = data.path.decodeFirstPool();
+
+        bool zeroForOne = tokenIn < tokenOut;
+
+        (int256 amount0Delta, int256 amount1Delta) = getPool(tokenIn, tokenOut, fee).swap(
+            recipient,
+            zeroForOne,
+            -amountOut.toInt256(),
+            sqrtPriceLimitX96 == 0
+                ? (zeroForOne ? TickMath.MIN_SQRT_RATIO + 1 : TickMath.MAX_SQRT_RATIO - 1)
+                : sqrtPriceLimitX96,
+            abi.encode(data)
+        );
+
+        uint256 amountOutReceived;
+        unchecked {
+            (amountIn, amountOutReceived) = zeroForOne
+                ? (uint256(amount0Delta), uint256(-amount1Delta))
+                : (uint256(amount1Delta), uint256(-amount0Delta));
+        }
+        // Without a price limit the full output must be received.
+        if (sqrtPriceLimitX96 == 0) require(amountOutReceived == amountOut);
+    }
+
+    function exactOutputSingle(ExactOutputSingleParams calldata params)
+        external
+        payable
+        checkDeadline(params.deadline)
+        returns (uint256 amountIn)
+    {
+        amountIn = exactOutputInternal(
+            params.amountOut,
+            params.recipient,
+            params.sqrtPriceLimitX96,
+            SwapCallbackData({
+                path: abi.encodePacked(params.tokenOut, params.fee, params.tokenIn),
+                payer: msg.sender
+            })
+        );
+
+        require(amountIn <= params.amountInMaximum, "Too much requested");
+        amountInCached = DEFAULT_AMOUNT_IN_CACHED;
+    }
+
+    function exactOutput(ExactOutputParams calldata params)
+        external
+        payable
+        checkDeadline(params.deadline)
+        returns (uint256 amountIn)
+    {
+        // The payer is fixed to msg.sender because they only pay for the final
+        // exact output swap, which executes first; the rest are paid inside the
+        // nested callback frames.
+        exactOutputInternal(
+            params.amountOut, params.recipient, 0, SwapCallbackData({path: params.path, payer: msg.sender})
+        );
+
+        amountIn = amountInCached;
+        require(amountIn <= params.amountInMaximum, "Too much requested");
+        amountInCached = DEFAULT_AMOUNT_IN_CACHED;
+    }
+}

@@ -1,0 +1,17 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+pragma hyperion >=0.0;
+
+import {IHyperionV2Callee} from "../v2/core/interfaces/IHyperionV2Callee.hyp";
+import {IHyperionV2Pair} from "../v2/core/interfaces/IHyperionV2Pair.hyp";
+
+/// @notice Calls back into the pair from inside the swap callback so the test
+/// can prove the `lock` modifier rejects reentrancy.
+contract HyperionV2ReentrancyProbe is IHyperionV2Callee {
+    function attack(address pair) external {
+        IHyperionV2Pair(pair).swap(1, 0, address(this), abi.encode(uint256(1)));
+    }
+
+    function hyperionV2Call(address, uint256, uint256, bytes calldata) external {
+        IHyperionV2Pair(msg.sender).sync();
+    }
+}

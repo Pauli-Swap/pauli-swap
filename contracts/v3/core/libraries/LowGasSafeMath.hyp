@@ -1,0 +1,29 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+pragma hyperion >=0.0;
+
+/// @title Optimized overflow and underflow safe math operations
+/// @dev Upstream implements these with explicit require checks because Solidity
+/// 0.7 does not check arithmetic. Hyperion checks by default, so the operators
+/// are used directly and the library exists only to keep call sites identical to
+/// Uniswap V3.
+library LowGasSafeMath {
+    function add(uint256 x, uint256 y) internal pure returns (uint256 z) {
+        z = x + y;
+    }
+
+    function sub(uint256 x, uint256 y) internal pure returns (uint256 z) {
+        z = x - y;
+    }
+
+    function mul(uint256 x, uint256 y) internal pure returns (uint256 z) {
+        z = x * y;
+    }
+
+    function add(int256 x, int256 y) internal pure returns (int256 z) {
+        z = x + y;
+    }
+
+    function sub(int256 x, int256 y) internal pure returns (int256 z) {
+        z = x - y;
+    }
+}

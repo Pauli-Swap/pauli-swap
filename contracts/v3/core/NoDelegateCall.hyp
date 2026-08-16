@@ -1,0 +1,26 @@
+// SPDX-License-Identifier: BUSL-1.1
+pragma hyperion >=0.0;
+
+/// @title Prevents delegatecall to a contract
+abstract contract NoDelegateCall {
+    /// @dev The original address of this contract, captured at deployment.
+    address private immutable original;
+
+    constructor() {
+        // Immutables are baked into the runtime code, so reading `original`
+        // through a delegatecall still yields the address of the contract that
+        // was deployed rather than the caller's own address.
+        original = address(this);
+    }
+
+    function checkNotDelegateCall() private view {
+        require(address(this) == original);
+    }
+
+    /// @dev The private method keeps the modifier from inlining the whole check
+    /// at every call site.
+    modifier noDelegateCall() {
+        checkNotDelegateCall();
+        _;
+    }
+}
