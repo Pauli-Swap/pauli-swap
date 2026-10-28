@@ -251,3 +251,20 @@ Token standard names follow QRL's: **SQRC-TF1** is the fungible token standard
 (ERC-20's counterpart), which is why the V2 liquidity token is
 `PauliV2SQRCTF1`. The ABI is unchanged — `transfer`, `approve`,
 `transferFrom`, `balanceOf`, `allowance`, plus `Transfer` and `Approval`.
+
+## License
+
+PauliSwap is a port of Uniswap, and every ported file keeps its upstream
+license and SPDX header. The upstream `LICENSE` files are copied verbatim
+next to the code they cover, in both `contracts/` and `contracts-qrvm/`:
+
+| Code | License | Upstream |
+| --- | --- | --- |
+| `v2/core`, `v2/periphery` | GPL-3.0-or-later | `Uniswap/v2-core`, `Uniswap/v2-periphery` |
+| `v3/core`: pool, factory, deployer, `NoDelegateCall`, and the libraries `Oracle`, `Position`, `SqrtPriceMath`, `SwapMath`, `Tick`, `TickBitmap` | BUSL-1.1. Its Change Date (2023-04-01) has passed, so these files are now available under GPL-2.0-or-later | `Uniswap/v3-core` v1.0.0 |
+| `v3/core`: interfaces and the other libraries | GPL-2.0-or-later, except `FullMath` (MIT) | `Uniswap/v3-core` v1.0.0 |
+| `v3/periphery` | GPL-2.0-or-later, except `contracts-qrvm/v3/periphery/lens/PauliV3PoolLens.hyp` (BUSL-1.1: it holds the pool's snapshot code, moved out of the pool) | `Uniswap/v3-periphery` v1.3.0 |
+| `contracts/vendor` | MIT, as published by `theQRL/qrl-contracts` | `theQRL/qrl-contracts@d3c84ee` |
+
+The rest of the repository (scripts, tests, test tokens, docs) is
+GPL-3.0-or-later; see [LICENSE](LICENSE).
