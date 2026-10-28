@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma hyperion >=0.0;
 
-import {IAcornV3Pool} from "../../core/interfaces/IAcornV3Pool.hyp";
+import {IPauliV3Pool} from "../../core/interfaces/IPauliV3Pool.hyp";
 import {PoolAddress} from "./PoolAddress.hyp";
 
-/// @notice Provides validation for callbacks from Acorn V3 pools
+/// @notice Provides validation for callbacks from Pauli V3 pools
 library CallbackValidation {
     function verifyCallback(address factory, address tokenA, address tokenB, uint24 fee)
         internal
         view
-        returns (IAcornV3Pool pool)
+        returns (IPauliV3Pool pool)
     {
         return verifyCallback(factory, PoolAddress.getPoolKey(tokenA, tokenB, fee));
     }
@@ -20,9 +20,9 @@ library CallbackValidation {
     function verifyCallback(address factory, PoolAddress.PoolKey memory poolKey)
         internal
         view
-        returns (IAcornV3Pool pool)
+        returns (IPauliV3Pool pool)
     {
-        pool = IAcornV3Pool(PoolAddress.computeAddress(factory, poolKey));
+        pool = IPauliV3Pool(PoolAddress.computeAddress(factory, poolKey));
         require(msg.sender == address(pool));
     }
 }

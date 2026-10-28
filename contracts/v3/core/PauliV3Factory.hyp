@@ -1,0 +1,65 @@
+// SPDX-License-Identifier: BUSL-1.1
+pragma hyperion >=0.0;
+
+import {IPauliV3Factory} from "./interfaces/IPauliV3Factory.hyp";
+import {PauliV3PoolDeployer} from "./PauliV3PoolDeployer.hyp";
+import {PauliV3Pool} from "./PauliV3Pool.hyp";
+import {NoDelegateCall} from "./NoDelegateCall.hyp";
+
+/// @title Canonical Pauli V3 factory
+/// @notice Deploys Pauli V3 pools and manages ownership and control over pool
+/// protocol fees
+contract PauliV3Factory is IPauliV3Factory, PauliV3PoolDeployer, NoDelegateCall {
+    address public owner;
+
+    mapping(uint24 => int24) public feeAmountTickSpacing;
+    mapping(address => mapping(address => mapping(uint24 => address))) public getPool;
+
+    constructor() {
+        owner = msg.sender;
+        emit OwnerChanged(address(0), msg.sender);
+
+        feeAmountTickSpacing[500] = 10;
+        emit FeeAmountEnabled(500, 10);
+        feeAmountTickSpacing[3000] = 60;
+        emit FeeAmountEnabled(3000, 60);
+        feeAmountTickSpacing[10000] = 200;
+        emit FeeAmountEnabled(10000, 200);
+    }
+
+    function createPool(address tokenA, address tokenB, uint24 fee)
+        external
+        noDelegateCall
+        returns (address pool)
+    {
+        require(tokenA != tokenB);
+        (address token0, address token1) = tokenA < tokenB ? (tokenA, tokenB) : (tokenB, tokenA);
+        require(token0 != address(0));
+        int24 tickSpacing = feeAmountTickSpacing[fee];
+        require(tickSpacing != 0);
+        require(getPool[token0][token1][fee] == address(0));
+        pool = deploy(address(this), token0, token1, fee, tickSpacing);
+        getPool[token0][token1][fee] = pool;
+        getPool[token1][token0][fee] = pool;
+        emit PoolCreated(token0, token1, fee, tickSpacing, pool);
+    }
+
+    function setOwner(address _owner) external {
+        require(msg.sender == owner);
+        emit OwnerChanged(owner, _owner);
+        owner = _owner;
+    }
+
+    /// @dev tickSpacing is capped at 16384 so that
+    /// TickBitmap#nextInitializedTickWithinOneWord can never overflow its int24
+    /// container from a valid tick.
+    function enableFeeAmount(uint24 fee, int24 tickSpacing) public {
+        require(msg.sender == owner);
+        require(fee < 1000000);
+        require(tickSpacing > 0 && tickSpacing < 16384);
+        require(feeAmountTickSpacing[fee] == 0);
+
+        feeAmountTickSpacing[fee] = tickSpacing;
+        emit FeeAmountEnabled(fee, tickSpacing);
+    }
+}

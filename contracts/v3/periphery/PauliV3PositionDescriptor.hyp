@@ -1,0 +1,180 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+pragma hyperion >=0.0;
+
+import {INonfungiblePositionManager} from "./interfaces/INonfungiblePositionManager.hyp";
+import {INonfungibleTokenPositionDescriptor} from "./interfaces/INonfungibleTokenPositionDescriptor.hyp";
+import {PoolAddress} from "./libraries/PoolAddress.hyp";
+
+interface ISQRCTF1Symbol {
+    function symbol() external view returns (string memory);
+}
+
+/// @title Describes Pauli V3 position NFTs as inline JSON metadata
+/// @notice Replaces Uniswap's NonfungibleTokenPositionDescriptor. Upstream
+/// renders an SVG through NFTDescriptor/NFTSVG and base64 helpers written in
+/// assembly against 32 byte memory words; this one returns the same metadata
+/// fields as text, with no image, and contains no assembly so the identical
+/// source is correct on both the 256 bit and the QRVM 512 bit word size.
+contract PauliV3PositionDescriptor is INonfungibleTokenPositionDescriptor {
+    bytes private constant HEX = "0123456789abcdef";
+    bytes private constant B64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+    struct Params {
+        uint256 tokenId;
+        address token0;
+        address token1;
+        string symbol0;
+        string symbol1;
+        uint24 fee;
+        int24 tickLower;
+        int24 tickUpper;
+        address pool;
+    }
+
+    /// @inheritdoc INonfungibleTokenPositionDescriptor
+    function tokenURI(INonfungiblePositionManager positionManager, uint256 tokenId)
+        external
+        view
+        override
+        returns (string memory)
+    {
+        Params memory p;
+        p.tokenId = tokenId;
+        (,, p.token0, p.token1, p.fee, p.tickLower, p.tickUpper,,,,,) = positionManager.positions(tokenId);
+        p.symbol0 = symbolOf(p.token0);
+        p.symbol1 = symbolOf(p.token1);
+        p.pool = PoolAddress.computeAddress(
+            positionManager.factory(), PoolAddress.PoolKey({token0: p.token0, token1: p.token1, fee: p.fee})
+        );
+
+        return string.concat(
+            "data:application/json;base64,",
+            base64(bytes(string.concat('{"name":"', name(p), '", "description":"', description(p), '"}')))
+        );
+    }
+
+    function name(Params memory p) private pure returns (string memory) {
+        return string.concat(
+            "Pauli - ",
+            feeToPercent(p.fee),
+            " - ",
+            p.symbol0,
+            "/",
+            p.symbol1,
+            " - ",
+            intToString(p.tickLower),
+            "<>",
+            intToString(p.tickUpper)
+        );
+    }
+
+    function description(Params memory p) private pure returns (string memory) {
+        string memory head = string.concat(
+            "This NFT represents a liquidity position in an Pauli V3 ",
+            p.symbol0,
+            "/",
+            p.symbol1,
+            " pool. The owner of this NFT can modify or redeem the position.\\n\\nPool Address: ",
+            addressToString(p.pool)
+        );
+        string memory tokens = string.concat(
+            "\\n",
+            p.symbol0,
+            " Address: ",
+            addressToString(p.token0),
+            "\\n",
+            p.symbol1,
+            " Address: ",
+            addressToString(p.token1)
+        );
+        return string.concat(
+            head, tokens, "\\nFee Tier: ", feeToPercent(p.fee), "\\nToken ID: ", uintToString(p.tokenId)
+        );
+    }
+
+    /// @dev A token without a readable symbol is shown by address, and the
+    /// symbol is JSON escaped because it is arbitrary token controlled text.
+    function symbolOf(address token) private view returns (string memory) {
+        try ISQRCTF1Symbol(token).symbol() returns (string memory s) {
+            return escape(s);
+        } catch {
+            return addressToString(token);
+        }
+    }
+
+    function escape(string memory s) private pure returns (string memory) {
+        bytes memory raw = bytes(s);
+        uint256 extra;
+        for (uint256 i = 0; i < raw.length; i++) {
+            if (raw[i] == '"' || raw[i] == "\\") extra++;
+        }
+        if (extra == 0) return s;
+        bytes memory out = new bytes(raw.length + extra);
+        uint256 j;
+        for (uint256 i = 0; i < raw.length; i++) {
+            if (raw[i] == '"' || raw[i] == "\\") out[j++] = "\\";
+            out[j++] = raw[i];
+        }
+        return string(out);
+    }
+
+    /// @dev Fees are in hundredths of a bip: 3000 is 0.3%, 100 is 0.01%.
+    function feeToPercent(uint24 fee) private pure returns (string memory) {
+        uint256 whole = fee / 10000;
+        uint256 frac = fee % 10000;
+        if (frac == 0) return string.concat(uintToString(whole), "%");
+        bytes memory digits = new bytes(4);
+        for (uint256 i = 4; i > 0; i--) {
+            digits[i - 1] = HEX[frac % 10];
+            frac /= 10;
+        }
+        uint256 len = 4;
+        while (digits[len - 1] == "0") len--;
+        bytes memory trimmed = new bytes(len);
+        for (uint256 i = 0; i < len; i++) trimmed[i] = digits[i];
+        return string.concat(uintToString(whole), ".", string(trimmed), "%");
+    }
+
+    function uintToString(uint256 value) private pure returns (string memory) {
+        if (value == 0) return "0";
+        uint256 len;
+        for (uint256 v = value; v != 0; v /= 10) len++;
+        bytes memory out = new bytes(len);
+        for (; value != 0; value /= 10) out[--len] = HEX[value % 10];
+        return string(out);
+    }
+
+    function intToString(int256 value) private pure returns (string memory) {
+        if (value >= 0) return uintToString(uint256(value));
+        return string.concat("-", uintToString(uint256(-value)));
+    }
+
+    /// @dev Hex of the packed address bytes, so the text is 40 hex digits on
+    /// the 20 byte line and 128 on QRVM without a width constant.
+    function addressToString(address addr) private pure returns (string memory) {
+        bytes memory raw = abi.encodePacked(addr);
+        bytes memory out = new bytes(1 + raw.length * 2);
+        out[0] = "Q";
+        for (uint256 i = 0; i < raw.length; i++) {
+            out[1 + 2 * i] = HEX[uint8(raw[i]) >> 4];
+            out[2 + 2 * i] = HEX[uint8(raw[i]) & 0x0f];
+        }
+        return string(out);
+    }
+
+    function base64(bytes memory data) private pure returns (string memory) {
+        if (data.length == 0) return "";
+        bytes memory out = new bytes(4 * ((data.length + 2) / 3));
+        uint256 j;
+        for (uint256 i = 0; i < data.length; i += 3) {
+            uint256 chunk = uint256(uint8(data[i])) << 16;
+            if (i + 1 < data.length) chunk |= uint256(uint8(data[i + 1])) << 8;
+            if (i + 2 < data.length) chunk |= uint256(uint8(data[i + 2]));
+            out[j++] = B64[(chunk >> 18) & 63];
+            out[j++] = B64[(chunk >> 12) & 63];
+            out[j++] = i + 1 < data.length ? B64[(chunk >> 6) & 63] : bytes1("=");
+            out[j++] = i + 2 < data.length ? B64[chunk & 63] : bytes1("=");
+        }
+        return string(out);
+    }
+}

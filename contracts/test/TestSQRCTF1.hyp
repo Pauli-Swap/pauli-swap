@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma hyperion >=0.0;
 
-import {AcornV2SQRCTF1} from "../v2/core/AcornV2SQRCTF1.hyp";
+import {PauliV2SQRCTF1} from "../v2/core/PauliV2SQRCTF1.hyp";
 
-contract TestSQRCTF1 is AcornV2SQRCTF1 {
+contract TestSQRCTF1 is PauliV2SQRCTF1 {
     constructor(uint256 totalSupply_) {
         _mint(msg.sender, totalSupply_);
     }

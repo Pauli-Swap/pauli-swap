@@ -1,0 +1,38 @@
+// SPDX-License-Identifier: MIT
+pragma hyperion >=0.0;
+
+/// @title Contains 512-bit math functions
+/// @notice Facilitates multiplication and division that can have overflow of an
+/// intermediate value without any loss of precision
+/// @dev Handles "phantom overflow", i.e. allows multiplication and division
+/// where an intermediate value overflows 256 bits.
+library FullMath {
+    /// @notice Calculates floor(a*b/denominator) with full precision. Throws if
+    /// the result overflows a uint256 or denominator == 0
+    /// @dev QRVM deviation: the stack word is 512 bits, so the product of two
+    /// uint256 values is exact in one word and upstream's 512 bit
+    /// reconstruction is unnecessary. Upstream's code is also wrong here:
+    /// `mulmod(a, b, not(0))` reduces modulo 2**512 - 1, prod1 always comes out
+    /// zero, the `denominator > prod1` overflow check never runs, and an
+    /// overflowing result is silently truncated to 256 bits instead of
+    /// reverting. The revert conditions below are upstream's.
+    function mulDiv(uint256 a, uint256 b, uint256 denominator) internal pure returns (uint256 result) {
+        require(denominator > 0);
+        uint256 high;
+        assembly {
+            result := div(mul(a, b), denominator)
+            high := shr(256, result)
+        }
+        require(high == 0);
+    }
+
+    /// @notice Calculates ceil(a*b/denominator) with full precision. Throws if
+    /// the result overflows a uint256 or denominator == 0
+    function mulDivRoundingUp(uint256 a, uint256 b, uint256 denominator) internal pure returns (uint256 result) {
+        result = mulDiv(a, b, denominator);
+        if (mulmod(a, b, denominator) > 0) {
+            require(result < type(uint256).max);
+            result++;
+        }
+    }
+}

@@ -1,0 +1,41 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+pragma hyperion >=0.0;
+
+import {IPauliV2Callee} from "../v2/core/interfaces/IPauliV2Callee.hyp";
+import {IPauliV2Pair} from "../v2/core/interfaces/IPauliV2Pair.hyp";
+import {IPauliV2SQRCTF1} from "../v2/core/interfaces/IPauliV2SQRCTF1.hyp";
+
+/// @notice Exercises the V2 flash swap path: borrow one token out of the pair
+/// and repay in the callback with the other token plus the 0.3% fee.
+contract PauliV2FlashBorrower is IPauliV2Callee {
+    /// @dev Set by the test to make the callback underpay, which must trip the
+    /// pair's K invariant.
+    bool public repayShort;
+
+    function setRepayShort(bool value) external {
+        repayShort = value;
+    }
+
+    function flashSwap(address pair, uint256 amount0Out, uint256 amount1Out) external {
+        IPauliV2Pair(pair).swap(amount0Out, amount1Out, address(this), abi.encode(msg.sender));
+    }
+
+    function pauliV2Call(address, uint256 amount0, uint256 amount1, bytes calldata data) external {
+        address payer = abi.decode(data, (address));
+        IPauliV2Pair pair = IPauliV2Pair(msg.sender);
+
+        (uint112 reserve0, uint112 reserve1,) = pair.getReserves();
+        address tokenIn = amount0 > 0 ? pair.token1() : pair.token0();
+        uint256 reserveIn = amount0 > 0 ? reserve1 : reserve0;
+        uint256 reserveOut = amount0 > 0 ? reserve0 : reserve1;
+        uint256 amountOut = amount0 > 0 ? amount0 : amount1;
+
+        uint256 numerator = reserveIn * amountOut * 1000;
+        uint256 denominator = (reserveOut - amountOut) * 997;
+        uint256 amountIn = numerator / denominator + 1;
+
+        if (repayShort) amountIn -= 1;
+
+        IPauliV2SQRCTF1(tokenIn).transferFrom(payer, msg.sender, amountIn);
+    }
+}

@@ -1,5 +1,5 @@
 {
-  "name": "acorn-swap",
+  "name": "pauli-swap",
   "version": "0.1.0",
   "private": true,
   "description": "Uniswap V2 and V3 ported to Hyperion for the QRL Zond testnet v2",
@@ -8,6 +8,8 @@
     "compile": "node scripts/compile.js",
     "initcodehash": "node scripts/init-code-hash.js",
     "build": "npm run compile && npm run initcodehash && npm run compile",
+    "compile:qrvm": "cross-env QRVM=1 node scripts/compile.js",
+    "check:qrvm": "npm run compile && npm run compile:qrvm && node scripts/qrvm/check.js",
     "test": "npm run compile && hardhat test",
     "test:only": "hardhat test",
     "addresses": "node scripts/write-addresses.js",
@@ -16,15 +18,22 @@
     "deploy:v2": "cross-env DEPLOY=v2 node scripts/deploy.js",
     "deploy:v3": "cross-env DEPLOY=v3 node scripts/deploy.js",
     "clean": "node -e \"require('fs').rmSync('build',{recursive:true,force:true});require('fs').rmSync('cache',{recursive:true,force:true})\"",
-    "verify": "node scripts/verify.mjs"
+    "verify": "node scripts/verify.mjs",
+    "deploy:qrvm": "node scripts/qrvm/deploy.js",
+    "audit:qrvm": "hardhat run scripts/qrvm/audit.js",
+    "diff:qrvm": "hardhat run scripts/qrvm/differential.js"
   },
   "devDependencies": {
+    "@noble/hashes": "1.3.2",
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
     "@theqrl/hypc": "^0.0.2",
     "@theqrl/qrl-contracts": "^0.1.0",
     "cross-env": "^7.0.3",
     "dotenv": "^16.4.5",
-    "hardhat": "^2.22.0"
+    "hardhat": "^2.22.0",
+    "qrl-contracts-qip55": "github:theQRL/qrl-contracts#d3c84eedac4e051f6e99892397c5e42f0f0a2266",
+    "qrl-wallet-qip55": "npm:@theqrl/wallet.js@6.3.0",
+    "qrl-web3-qip55": "npm:@theqrl/web3@1.0.3"
   },
   "dependencies": {
     "@theqrl/web3": "1.0.1"

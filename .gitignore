@@ -4,3 +4,6 @@ cache/
 artifacts/
 .env
 deployments/*.json
+.env.*
+!.env.example
+!.env.devnet.example

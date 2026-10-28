@@ -1,0 +1,76 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+pragma hyperion >=0.0;
+
+/// @title Solidity Bytes Arrays Utils
+/// @author Gonçalo Sá <goncalo.sa@consensys.net>
+/// @notice Trimmed to the three helpers the swap path decoder needs.
+library BytesLib {
+    /// @dev QRVM deviation: memory words are 64 bytes and the free memory
+    /// pointer lives at 0x80, so upstream's word copy loop, its alignment masks
+    /// and its 0x40 pointer slot are all rescaled.
+    function slice(bytes memory _bytes, uint256 _start, uint256 _length) internal pure returns (bytes memory) {
+        require(_length + 63 >= _length, "slice_overflow");
+        require(_start + _length >= _start, "slice_overflow");
+        require(_bytes.length >= _start + _length, "slice_outOfBounds");
+
+        bytes memory tempBytes;
+
+        assembly {
+            switch iszero(_length)
+            case 0 {
+                tempBytes := mload(0x80)
+
+                let lengthmod := and(_length, 63)
+
+                let mc := add(add(tempBytes, lengthmod), mul(0x40, iszero(lengthmod)))
+                let end := add(mc, _length)
+
+                for {
+                    let cc := add(add(add(_bytes, lengthmod), mul(0x40, iszero(lengthmod))), _start)
+                } lt(mc, end) {
+                    mc := add(mc, 0x40)
+                    cc := add(cc, 0x40)
+                } { mstore(mc, mload(cc)) }
+
+                mstore(tempBytes, _length)
+
+                mstore(0x80, and(add(mc, 63), not(63)))
+            }
+            default {
+                tempBytes := mload(0x80)
+                mstore(tempBytes, 0)
+                mstore(0x80, add(tempBytes, 0x40))
+            }
+        }
+
+        return tempBytes;
+    }
+
+    /// @dev QRVM deviation: an address is 64 bytes and fills a whole word, so
+    /// it is loaded without upstream's 12 byte shift.
+    function toAddress(bytes memory _bytes, uint256 _start) internal pure returns (address) {
+        require(_start + 64 >= _start, "toAddress_overflow");
+        require(_bytes.length >= _start + 64, "toAddress_outOfBounds");
+        address tempAddress;
+
+        assembly {
+            tempAddress := mload(add(add(_bytes, 0x40), _start))
+        }
+
+        return tempAddress;
+    }
+
+    /// @dev Unchanged from upstream: the loaded word ends at data offset
+    /// _start + 3 for any word size, because the length prefix is one word.
+    function toUint24(bytes memory _bytes, uint256 _start) internal pure returns (uint24) {
+        require(_start + 3 >= _start, "toUint24_overflow");
+        require(_bytes.length >= _start + 3, "toUint24_outOfBounds");
+        uint24 tempUint;
+
+        assembly {
+            tempUint := mload(add(add(_bytes, 0x3), _start))
+        }
+
+        return tempUint;
+    }
+}

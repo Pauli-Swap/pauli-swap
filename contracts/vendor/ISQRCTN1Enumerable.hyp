@@ -1,0 +1,34 @@
+// SPDX-License-Identifier: MIT
+// QRL Contracts (last updated v0.1.0) (token/SQRCTN1/extensions/ISQRCTN1Enumerable.hyp)
+
+pragma hyperion >=0.0;
+
+// Vendored verbatim from theQRL/qrl-contracts@d3c84ee, where this extension
+// exists, because the published 0.1.0 package does not ship it. Only the
+// import paths differ.
+
+import {ISQRCTN1} from "@theqrl/qrl-contracts/token/SQRCTN1/ISQRCTN1.hyp";
+
+/**
+ * @title SQRC-TN1 Token Standard, optional enumeration extension
+ * @dev See https://eips.ethereum.org/EIPS/eip-721 (Enumerable extension, mirrored
+ *      for the QRL token standard).
+ */
+interface ISQRCTN1Enumerable is ISQRCTN1 {
+    /**
+     * @dev Returns the total amount of tokens stored by the contract.
+     */
+    function totalSupply() external view returns (uint256);
+
+    /**
+     * @dev Returns a token ID owned by `owner` at a given `index` of its token list.
+     * Use along with {balanceOf} to enumerate all of ``owner``'s tokens.
+     */
+    function tokenOfOwnerByIndex(address owner, uint256 index) external view returns (uint256);
+
+    /**
+     * @dev Returns a token ID at a given `index` of all the tokens stored by the contract.
+     * Use along with {totalSupply} to enumerate all tokens.
+     */
+    function tokenByIndex(uint256 index) external view returns (uint256);
+}

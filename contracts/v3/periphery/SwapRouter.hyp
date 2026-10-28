@@ -3,7 +3,7 @@ pragma hyperion >=0.0;
 
 import {SafeCast} from "../core/libraries/SafeCast.hyp";
 import {TickMath} from "../core/libraries/TickMath.hyp";
-import {IAcornV3Pool} from "../core/interfaces/IAcornV3Pool.hyp";
+import {IPauliV3Pool} from "../core/interfaces/IPauliV3Pool.hyp";
 import {ISwapRouter} from "./interfaces/ISwapRouter.hyp";
 import {PeripheryImmutableState} from "./base/PeripheryImmutableState.hyp";
 import {PeripheryValidation} from "./base/PeripheryValidation.hyp";
@@ -13,8 +13,8 @@ import {Path} from "./libraries/Path.hyp";
 import {PoolAddress} from "./libraries/PoolAddress.hyp";
 import {CallbackValidation} from "./libraries/CallbackValidation.hyp";
 
-/// @title Acorn V3 Swap Router
-/// @notice Router for stateless execution of swaps against Acorn V3
+/// @title Pauli V3 Swap Router
+/// @notice Router for stateless execution of swaps against Pauli V3
 /// @dev Port of Uniswap's SwapRouter. SelfPermit is not inherited: EIP-2612
 /// needs ecrecover, which Zond does not provide, so callers must approve the
 /// router in a separate transaction.
@@ -32,8 +32,8 @@ contract SwapRouter is ISwapRouter, PeripheryImmutableState, PeripheryValidation
 
     constructor(address _factory, address _WQRL9) PeripheryImmutableState(_factory, _WQRL9) {}
 
-    function getPool(address tokenA, address tokenB, uint24 fee) private view returns (IAcornV3Pool) {
-        return IAcornV3Pool(PoolAddress.computeAddress(factory, PoolAddress.getPoolKey(tokenA, tokenB, fee)));
+    function getPool(address tokenA, address tokenB, uint24 fee) private view returns (IPauliV3Pool) {
+        return IPauliV3Pool(PoolAddress.computeAddress(factory, PoolAddress.getPoolKey(tokenA, tokenB, fee)));
     }
 
     struct SwapCallbackData {
@@ -41,7 +41,7 @@ contract SwapRouter is ISwapRouter, PeripheryImmutableState, PeripheryValidation
         address payer;
     }
 
-    function acornV3SwapCallback(int256 amount0Delta, int256 amount1Delta, bytes calldata _data) external {
+    function pauliV3SwapCallback(int256 amount0Delta, int256 amount1Delta, bytes calldata _data) external {
         require(amount0Delta > 0 || amount1Delta > 0);
         SwapCallbackData memory data = abi.decode(_data, (SwapCallbackData));
         (address tokenIn, address tokenOut, uint24 fee) = data.path.decodeFirstPool();

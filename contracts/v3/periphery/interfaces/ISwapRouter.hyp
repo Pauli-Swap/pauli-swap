@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma hyperion >=0.0;
 
-import {IAcornV3SwapCallback} from "../../core/interfaces/callback/IAcornV3Callbacks.hyp";
+import {IPauliV3SwapCallback} from "../../core/interfaces/callback/IPauliV3Callbacks.hyp";
 
 /// @title Router token swapping functionality
-interface ISwapRouter is IAcornV3SwapCallback {
+interface ISwapRouter is IPauliV3SwapCallback {
     struct ExactInputSingleParams {
         address tokenIn;
         address tokenOut;

@@ -3,8 +3,8 @@ pragma hyperion >=0.0;
 
 import {SafeCast} from "../../core/libraries/SafeCast.hyp";
 import {TickMath} from "../../core/libraries/TickMath.hyp";
-import {IAcornV3Pool} from "../../core/interfaces/IAcornV3Pool.hyp";
-import {IAcornV3SwapCallback} from "../../core/interfaces/callback/IAcornV3Callbacks.hyp";
+import {IPauliV3Pool} from "../../core/interfaces/IPauliV3Pool.hyp";
+import {IPauliV3SwapCallback} from "../../core/interfaces/callback/IPauliV3Callbacks.hyp";
 import {PeripheryImmutableState} from "../base/PeripheryImmutableState.hyp";
 import {Path} from "../libraries/Path.hyp";
 import {PoolAddress} from "../libraries/PoolAddress.hyp";
@@ -15,7 +15,7 @@ import {CallbackValidation} from "../libraries/CallbackValidation.hyp";
 /// executing it
 /// @dev These functions are not gas efficient and must not be called on chain.
 /// They run a real swap and read the result out of the revert data.
-contract Quoter is IAcornV3SwapCallback, PeripheryImmutableState {
+contract Quoter is IPauliV3SwapCallback, PeripheryImmutableState {
     using Path for bytes;
     using SafeCast for uint256;
 
@@ -24,11 +24,11 @@ contract Quoter is IAcornV3SwapCallback, PeripheryImmutableState {
 
     constructor(address _factory, address _WQRL9) PeripheryImmutableState(_factory, _WQRL9) {}
 
-    function getPool(address tokenA, address tokenB, uint24 fee) private view returns (IAcornV3Pool) {
-        return IAcornV3Pool(PoolAddress.computeAddress(factory, PoolAddress.getPoolKey(tokenA, tokenB, fee)));
+    function getPool(address tokenA, address tokenB, uint24 fee) private view returns (IPauliV3Pool) {
+        return IPauliV3Pool(PoolAddress.computeAddress(factory, PoolAddress.getPoolKey(tokenA, tokenB, fee)));
     }
 
-    function acornV3SwapCallback(int256 amount0Delta, int256 amount1Delta, bytes calldata path) external view {
+    function pauliV3SwapCallback(int256 amount0Delta, int256 amount1Delta, bytes calldata path) external view {
         require(amount0Delta > 0 || amount1Delta > 0);
         (address tokenIn, address tokenOut, uint24 fee) = Path.decodeFirstPool(path);
         CallbackValidation.verifyCallback(factory, tokenIn, tokenOut, fee);

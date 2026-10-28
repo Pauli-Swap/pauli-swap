@@ -1,0 +1,74 @@
+// SPDX-License-Identifier: BUSL-1.1
+pragma hyperion >=0.0;
+
+import {IPauliV3PoolDeployer} from "./interfaces/IPauliV3PoolDeployer.hyp";
+
+/// @dev QRVM deviation: the pool's init code is larger than MaxCodeSize, so no
+/// contract can carry it inline the way upstream's `new PauliV3Pool{salt}`
+/// does. It is stored instead as the runtime code of two chunk contracts, each
+/// prefixed with a STOP byte so that calling a chunk does nothing, and is
+/// reassembled in memory for every CREATE2. This is the split code factory
+/// pattern of Balancer V2's BaseSplitCodeFactory. See docs/QRVM.md.
+contract PauliV3PoolDeployer is IPauliV3PoolDeployer {
+    struct Parameters {
+        address factory;
+        address token0;
+        address token1;
+        uint24 fee;
+        int24 tickSpacing;
+    }
+
+    Parameters public parameters;
+
+    address public immutable poolCodeChunkA;
+    address public immutable poolCodeChunkB;
+    uint256 private immutable chunkASize;
+    uint256 private immutable chunkBSize;
+
+    constructor(address chunkA, address chunkB) {
+        require(chunkA.code.length > 1 && chunkB.code.length > 1);
+        poolCodeChunkA = chunkA;
+        poolCodeChunkB = chunkB;
+        chunkASize = chunkA.code.length - 1;
+        chunkBSize = chunkB.code.length - 1;
+    }
+
+    /// @notice The pool creation code every CREATE2 of this deployer uses.
+    function poolCreationCode() public view returns (bytes memory code) {
+        address chunkA = poolCodeChunkA;
+        address chunkB = poolCodeChunkB;
+        uint256 sizeA = chunkASize;
+        uint256 sizeB = chunkBSize;
+        code = new bytes(sizeA + sizeB);
+        // A `bytes` length word is 64 bytes on QRVM, so the data starts at 0x40.
+        assembly {
+            let data := add(code, 0x40)
+            extcodecopy(chunkA, data, 1, sizeA)
+            extcodecopy(chunkB, add(data, sizeA), 1, sizeB)
+        }
+    }
+
+    /// @notice keccak256 of the pool creation code, the input off chain code
+    /// needs to derive a pool address.
+    function poolCodeHash() external view returns (bytes32) {
+        return keccak256(poolCreationCode());
+    }
+
+    /// @dev Deploys a pool by transiently setting the parameters storage slot,
+    /// then clearing it. The pool constructor reads them back, which keeps its
+    /// init code independent of the arguments and therefore its hash constant.
+    function deploy(address factory, address token0, address token1, uint24 fee, int24 tickSpacing)
+        internal
+        returns (address pool)
+    {
+        parameters =
+            Parameters({factory: factory, token0: token0, token1: token1, fee: fee, tickSpacing: tickSpacing});
+        bytes memory code = poolCreationCode();
+        bytes32 salt = keccak256(abi.encode(token0, token1, fee));
+        assembly {
+            pool := create2(0, add(code, 0x40), mload(code), salt)
+        }
+        require(pool != address(0));
+        delete parameters;
+    }
+}

@@ -1,10 +1,53 @@
-﻿const fs = require('fs');
+const fs = require('fs');
 const path = require('path');
-const hypc = require('@theqrl/hypc');
+const { spawnSync } = require('child_process');
 
 const ROOT = path.resolve(__dirname, '..');
 const SOURCES = path.join(ROOT, 'contracts');
-const ARTIFACTS = path.join(ROOT, 'build', 'hyperion');
+
+// QRVM=1 builds for a QIP-55 chain (64 byte addresses, 512 bit words) instead
+// of the 20 byte testnet. npm hypc 0.0.2 predates QRVM codegen, so that build
+// needs a hypc compiled from hyperion main, and the files under
+// contracts-qrvm/ replace their counterparts under contracts/ unit for unit.
+// docs/QRVM.md lists every replacement and why it exists.
+const QRVM = process.env.QRVM === '1' || process.argv.includes('--qrvm');
+const OVERLAY = path.join(ROOT, 'contracts-qrvm');
+const ARTIFACTS = path.join(ROOT, 'build', QRVM ? 'qrvm' : 'hyperion');
+const OUTPUT_KEY = QRVM ? 'qrvm' : 'zvm';
+// The published @theqrl/qrl-contracts 0.1.0 is 20 byte only (its Strings casts
+// address through uint160), and the QIP-55 rewrite exists only on its main
+// branch, pinned by commit under this npm alias.
+const QIP55_CONTRACTS = 'qrl-contracts-qip55';
+
+function makeCompiler() {
+  if (!QRVM) {
+    const hypc = require('@theqrl/hypc');
+    return { compile: (input) => hypc.compile(input), version: () => hypc.version() };
+  }
+  const [cmd, args] = process.env.HYPC_BIN
+    ? [process.env.HYPC_BIN, []]
+    : ['docker', ['run', '--rm', '-i', process.env.HYPC_DOCKER_IMAGE || 'hypc:local']];
+  const run = (extra, input) => {
+    const result = spawnSync(cmd, [...args, ...extra], { input, encoding: 'utf8', maxBuffer: 1 << 28 });
+    if (result.error) throw result.error;
+    if (result.status !== 0) throw new Error(`hypc exited ${result.status}: ${result.stderr}`);
+    return result.stdout;
+  };
+  return {
+    compile: (input) => run(['--standard-json'], input),
+    version: () => (run(['--version']).match(/Version:\s*(\S+)/) || [])[1],
+  };
+}
+
+const hypc = makeCompiler();
+
+function diskFor(unit) {
+  if (QRVM && unit.startsWith('contracts/')) {
+    const overlay = path.join(OVERLAY, unit.slice('contracts/'.length));
+    if (fs.existsSync(overlay)) return overlay;
+  }
+  return path.join(ROOT, unit);
+}
 
 // Uniswap ships each package with its own optimizer budget and the compiled
 // bytecode is part of the CREATE2 address derivation, so the grouping has to be
@@ -17,7 +60,7 @@ const ARTIFACTS = path.join(ROOT, 'build', 'hyperion');
 // a higher count trades size for gas. At 200 the factory has only ~150 bytes of
 // headroom, which is why the size check below is a build error rather than a
 // warning.
-// V2 core stays at Uniswap's run count because AcornV2Pair's compiled init
+// V2 core stays at Uniswap's run count because PauliV2Pair's compiled init
 // code is hashed into PAIR_INIT_CODE_HASH; changing it would orphan an already
 // deployed factory. The periphery is free to shrink, and has to: the QRL wallet
 // RPC proxy caps a request body at ~51 KB, and an ML-DSA-87 signature plus
@@ -25,7 +68,9 @@ const ARTIFACTS = path.join(ROOT, 'build', 'hyperion');
 const OPTIMIZER_RUNS = [
   ['contracts/v2/core/', 999999],
   ['contracts/v2/periphery/', 200],
-  ['contracts/v3/', 200],
+  // On QRVM the pool is over MaxCodeSize at 200 runs and only fits at one, see
+  // docs/QRVM.md. No init code hash is pinned on that line, so this is free.
+  ['contracts/v3/', QRVM ? 1 : 200],
   ['contracts/test/', 200],
 ];
 
@@ -59,11 +104,12 @@ function collectSources(files) {
   function resolve(spec, importer) {
     if (spec.startsWith('.')) {
       const unit = path.normalize(path.join(path.dirname(importer), spec)).split(path.sep).join('/');
-      const disk = path.join(ROOT, unit);
+      const disk = diskFor(unit);
       return fs.existsSync(disk) ? { unit, disk } : null;
     }
-    const disk = path.join(ROOT, 'node_modules', spec);
-    return fs.existsSync(disk) ? { unit: `node_modules/${spec}`, disk } : null;
+    const pkg = QRVM ? spec.replace(/^@theqrl\/qrl-contracts\//, `${QIP55_CONTRACTS}/`) : spec;
+    const disk = path.join(ROOT, 'node_modules', pkg);
+    return fs.existsSync(disk) ? { unit: `node_modules/${pkg}`, disk } : null;
   }
 
   function load(unit, disk) {
@@ -81,23 +127,25 @@ function collectSources(files) {
     );
   }
 
-  for (const file of files) load(toUnit(file), file);
+  for (const file of files) load(toUnit(file), diskFor(toUnit(file)));
   return sources;
 }
 
 function writeArtifact(unit, name, contract) {
   const outDir = path.join(ARTIFACTS, unit);
   fs.mkdirSync(outDir, { recursive: true });
+  const out = contract[OUTPUT_KEY];
   const artifact = {
     _format: 'hh-hyp-artifact-1',
     contractName: name,
     sourceName: unit,
     abi: contract.abi,
-    bytecode: '0x' + (contract.zvm.bytecode.object || ''),
-    deployedBytecode: '0x' + (contract.zvm.deployedBytecode.object || ''),
-    methodIdentifiers: contract.zvm.methodIdentifiers || {},
-    linkReferences: {},
-    deployedLinkReferences: {},
+    bytecode: '0x' + (out.bytecode.object || ''),
+    deployedBytecode: '0x' + (out.deployedBytecode.object || ''),
+    methodIdentifiers: out.methodIdentifiers || {},
+    linkReferences: out.bytecode.linkReferences || {},
+    deployedLinkReferences: out.deployedBytecode.linkReferences || {},
+    immutableReferences: out.deployedBytecode.immutableReferences || {},
   };
   fs.writeFileSync(path.join(outDir, `${name}.json`), JSON.stringify(artifact, null, 2));
   return artifact;
@@ -105,6 +153,13 @@ function writeArtifact(unit, name, contract) {
 
 function main() {
   const files = fs.existsSync(SOURCES) ? listSources(SOURCES) : [];
+  if (QRVM && fs.existsSync(OVERLAY)) {
+    // Overlay units with no counterpart under contracts/ are QRVM only.
+    for (const file of listSources(OVERLAY)) {
+      const twin = path.join(SOURCES, path.relative(OVERLAY, file));
+      if (!fs.existsSync(twin)) files.push(twin);
+    }
+  }
   if (files.length === 0) {
     console.error('No .hyp sources found under contracts/.');
     process.exit(1);
@@ -140,9 +195,12 @@ function main() {
               '*': {
                 '*': [
                   'abi',
-                  'zvm.bytecode.object',
-                  'zvm.deployedBytecode.object',
-                  'zvm.methodIdentifiers',
+                  `${OUTPUT_KEY}.bytecode.object`,
+                  `${OUTPUT_KEY}.bytecode.linkReferences`,
+                  `${OUTPUT_KEY}.deployedBytecode.object`,
+                  `${OUTPUT_KEY}.deployedBytecode.linkReferences`,
+                  `${OUTPUT_KEY}.deployedBytecode.immutableReferences`,
+                  `${OUTPUT_KEY}.methodIdentifiers`,
                   'storageLayout',
                 ],
               },
@@ -153,6 +211,8 @@ function main() {
     );
 
     for (const err of output.errors || []) {
+      // The hyperion main line flags itself as a pre-release on every build.
+      if (err.errorCode === '3805') continue;
       if (err.severity === 'error') {
         failed = true;
         console.error(err.formattedMessage);

@@ -1,0 +1,58 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+pragma hyperion >=0.0;
+
+import {IPauliV2Factory} from "./interfaces/IPauliV2Factory.hyp";
+import {IPauliV2Pair} from "./interfaces/IPauliV2Pair.hyp";
+import {PauliV2Pair} from "./PauliV2Pair.hyp";
+
+contract PauliV2Factory is IPauliV2Factory {
+    address public feeTo;
+    address public feeToSetter;
+
+    mapping(address => mapping(address => address)) public getPair;
+    address[] public allPairs;
+
+    constructor(address _feeToSetter) {
+        feeToSetter = _feeToSetter;
+    }
+
+    function allPairsLength() external view returns (uint256) {
+        return allPairs.length;
+    }
+
+    /// @notice Deterministic CREATE2 address, so off chain code can derive a
+    /// pair address without a call. Any change to PauliV2Pair bytecode or to
+    /// the optimizer settings changes this value and must be mirrored in
+    /// PauliV2Library.PAIR_INIT_CODE_HASH.
+    function pairCodeHash() external pure returns (bytes32) {
+        return keccak256(type(PauliV2Pair).creationCode);
+    }
+
+    function createPair(address tokenA, address tokenB) external returns (address pair) {
+        require(tokenA != tokenB, "PauliV2: IDENTICAL_ADDRESSES");
+        (address token0, address token1) = tokenA < tokenB ? (tokenA, tokenB) : (tokenB, tokenA);
+        require(token0 != address(0), "PauliV2: ZERO_ADDRESS");
+        require(getPair[token0][token1] == address(0), "PauliV2: PAIR_EXISTS");
+        bytes memory bytecode = type(PauliV2Pair).creationCode;
+        bytes32 salt = keccak256(abi.encodePacked(token0, token1));
+        assembly {
+            pair := create2(0, add(bytecode, 32), mload(bytecode), salt)
+        }
+        require(pair != address(0), "PauliV2: CREATE2_FAILED");
+        IPauliV2Pair(pair).initialize(token0, token1);
+        getPair[token0][token1] = pair;
+        getPair[token1][token0] = pair;
+        allPairs.push(pair);
+        emit PairCreated(token0, token1, pair, allPairs.length);
+    }
+
+    function setFeeTo(address _feeTo) external {
+        require(msg.sender == feeToSetter, "PauliV2: FORBIDDEN");
+        feeTo = _feeTo;
+    }
+
+    function setFeeToSetter(address _feeToSetter) external {
+        require(msg.sender == feeToSetter, "PauliV2: FORBIDDEN");
+        feeToSetter = _feeToSetter;
+    }
+}

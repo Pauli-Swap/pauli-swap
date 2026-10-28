@@ -1,0 +1,12 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+pragma hyperion >=0.0;
+
+/// @title Immutable state
+/// @notice Functions that return immutable state of the router
+interface IPeripheryImmutableState {
+    /// @return Returns the address of the Pauli V3 factory
+    function factory() external view returns (address);
+
+    /// @return Returns the address of WQRL9
+    function WQRL9() external view returns (address);
+}

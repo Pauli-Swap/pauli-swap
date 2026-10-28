@@ -11,8 +11,8 @@ const abiOf = (n) => JSON.parse(fs.readFileSync(path.join(ART, idx[n][0], `${n}.
 
 const d = JSON.parse(fs.readFileSync('deployments/zondTestnet.json', 'utf8'));
 
-const factory = new web3.qrl.Contract(abiOf('AcornV2Factory').abi, d.v2.factory);
-const router = new web3.qrl.Contract(abiOf('AcornV2Router02').abi, d.v2.router02);
+const factory = new web3.qrl.Contract(abiOf('PauliV2Factory').abi, d.v2.factory);
+const router = new web3.qrl.Contract(abiOf('PauliV2Router02').abi, d.v2.router02);
 
 console.log('--- on chain state ---');
 console.log('factory.feeToSetter   ', await factory.methods.feeToSetter().call());
@@ -20,7 +20,7 @@ console.log('factory.feeTo         ', await factory.methods.feeTo().call());
 console.log('factory.allPairsLength', (await factory.methods.allPairsLength().call()).toString());
 
 const onChainHash = await factory.methods.pairCodeHash().call();
-const artifactHash = web3.utils.keccak256(abiOf('AcornV2Pair').bytecode);
+const artifactHash = web3.utils.keccak256(abiOf('PauliV2Pair').bytecode);
 console.log('factory.pairCodeHash  ', onChainHash);
 console.log('artifact pair hash    ', artifactHash);
 console.log('  match               ', onChainHash.toLowerCase() === artifactHash.toLowerCase() ? 'YES' : 'NO');

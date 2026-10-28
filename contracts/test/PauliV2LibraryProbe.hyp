@@ -1,0 +1,32 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+pragma hyperion >=0.0;
+
+import {PauliV2Library} from "../v2/periphery/libraries/PauliV2Library.hyp";
+
+/// @notice Exposes the internal library so tests can assert the pinned
+/// PAIR_INIT_CODE_HASH still derives the address the factory actually deploys.
+contract PauliV2LibraryProbe {
+    function pairFor(address factory, address tokenA, address tokenB) external pure returns (address) {
+        return PauliV2Library.pairFor(factory, tokenA, tokenB);
+    }
+
+    function initCodeHash() external pure returns (bytes32) {
+        return PauliV2Library.PAIR_INIT_CODE_HASH;
+    }
+
+    function getAmountOut(uint256 amountIn, uint256 reserveIn, uint256 reserveOut)
+        external
+        pure
+        returns (uint256)
+    {
+        return PauliV2Library.getAmountOut(amountIn, reserveIn, reserveOut);
+    }
+
+    function getAmountIn(uint256 amountOut, uint256 reserveIn, uint256 reserveOut)
+        external
+        pure
+        returns (uint256)
+    {
+        return PauliV2Library.getAmountIn(amountOut, reserveIn, reserveOut);
+    }
+}

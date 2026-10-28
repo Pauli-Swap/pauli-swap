@@ -1,0 +1,27 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+pragma hyperion >=0.0;
+
+import {PauliV2Library} from "../v2/periphery/libraries/PauliV2Library.hyp";
+
+/// @notice Exposes the internal library to the QRVM differential tests.
+contract PauliV2LibraryProbe {
+    function pairFor(address factory, address tokenA, address tokenB) external view returns (address) {
+        return PauliV2Library.pairFor(factory, tokenA, tokenB);
+    }
+
+    function getAmountOut(uint256 amountIn, uint256 reserveIn, uint256 reserveOut)
+        external
+        pure
+        returns (uint256)
+    {
+        return PauliV2Library.getAmountOut(amountIn, reserveIn, reserveOut);
+    }
+
+    function getAmountIn(uint256 amountOut, uint256 reserveIn, uint256 reserveOut)
+        external
+        pure
+        returns (uint256)
+    {
+        return PauliV2Library.getAmountIn(amountOut, reserveIn, reserveOut);
+    }
+}

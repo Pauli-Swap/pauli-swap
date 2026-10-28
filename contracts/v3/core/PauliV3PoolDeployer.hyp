@@ -1,0 +1,30 @@
+// SPDX-License-Identifier: BUSL-1.1
+pragma hyperion >=0.0;
+
+import {IPauliV3PoolDeployer} from "./interfaces/IPauliV3PoolDeployer.hyp";
+import {PauliV3Pool} from "./PauliV3Pool.hyp";
+
+contract PauliV3PoolDeployer is IPauliV3PoolDeployer {
+    struct Parameters {
+        address factory;
+        address token0;
+        address token1;
+        uint24 fee;
+        int24 tickSpacing;
+    }
+
+    Parameters public parameters;
+
+    /// @dev Deploys a pool by transiently setting the parameters storage slot,
+    /// then clearing it. The pool constructor reads them back, which keeps its
+    /// init code independent of the arguments and therefore its hash constant.
+    function deploy(address factory, address token0, address token1, uint24 fee, int24 tickSpacing)
+        internal
+        returns (address pool)
+    {
+        parameters =
+            Parameters({factory: factory, token0: token0, token1: token1, fee: fee, tickSpacing: tickSpacing});
+        pool = address(new PauliV3Pool{salt: keccak256(abi.encode(token0, token1, fee))}());
+        delete parameters;
+    }
+}

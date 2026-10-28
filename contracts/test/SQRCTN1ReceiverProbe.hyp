@@ -1,0 +1,18 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+pragma hyperion >=0.0;
+
+/// @notice Contract recipient for SQRC-TN1 safe transfers. It accepts, or
+/// rejects with a reason string, which is what exercises qrl-contracts'
+/// receiver check and its revert bubbling.
+contract SQRCTN1ReceiverProbe {
+    bool public reject;
+
+    function setReject(bool value) external {
+        reject = value;
+    }
+
+    function onSQRCTN1Received(address, address, uint256, bytes calldata) external view returns (bytes4) {
+        require(!reject, "Receiver rejects");
+        return this.onSQRCTN1Received.selector;
+    }
+}

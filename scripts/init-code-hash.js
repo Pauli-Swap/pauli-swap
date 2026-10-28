@@ -9,12 +9,12 @@ const ROOT = path.resolve(__dirname, '..');
 // compile again so the new constant is baked into the periphery bytecode.
 const TARGETS = [
   {
-    artifact: 'build/hyperion/contracts/v2/core/AcornV2Pair.hyp/AcornV2Pair.json',
-    source: 'contracts/v2/periphery/libraries/AcornV2Library.hyp',
+    artifact: 'build/hyperion/contracts/v2/core/PauliV2Pair.hyp/PauliV2Pair.json',
+    source: 'contracts/v2/periphery/libraries/PauliV2Library.hyp',
     constant: 'PAIR_INIT_CODE_HASH',
   },
   {
-    artifact: 'build/hyperion/contracts/v3/core/AcornV3Pool.hyp/AcornV3Pool.json',
+    artifact: 'build/hyperion/contracts/v3/core/PauliV3Pool.hyp/PauliV3Pool.json',
     source: 'contracts/v3/periphery/libraries/PoolAddress.hyp',
     constant: 'POOL_INIT_CODE_HASH',
   },

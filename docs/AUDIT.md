@@ -1,4 +1,4 @@
-# AcornSwap — port review against QRL Zond testnet v2
+# PauliSwap — port review against QRL Zond testnet v2
 
 Scope: the Uniswap V2 and V3 forks in `contracts/`, reviewed for correctness of
 the port and for fitness against the QRL Zond testnet v2 (`chainId` 1337).
@@ -36,10 +36,11 @@ secp256k1 recovery has nothing to recover. Consequences applied to the port:
 
 | Upstream feature | Status here |
 | --- | --- |
-| `UniswapV2ERC20.permit`, `DOMAIN_SEPARATOR`, `PERMIT_TYPEHASH`, `nonces` | Removed from `AcornV2SQRCTF1` |
-| `UniswapV2Router02.removeLiquidity*WithPermit*` (3 entry points) | Removed from `AcornV2Router02` |
+| `UniswapV2ERC20.permit`, `DOMAIN_SEPARATOR`, `PERMIT_TYPEHASH`, `nonces` | Removed from `PauliV2SQRCTF1` |
+| `UniswapV2Router02.removeLiquidity*WithPermit*` (3 entry points) | Removed from `PauliV2Router02` |
 | `SelfPermit` on the V3 router | Not inherited by `SwapRouter` |
-| `ERC721Permit` / `NonfungiblePositionManager.permit` | Not ported (see §4) |
+| `ERC721Permit` / `NonfungiblePositionManager.permit` | Removed; the position manager is ported without it (§4) |
+| `SelfPermit` on `V3Migrator` | Not inherited; V2 LP tokens are approved first |
 
 **Impact on integrators:** every flow that Uniswap lets a user do in one
 transaction with an off chain signature now needs an explicit `approve`
@@ -77,7 +78,7 @@ normal operation rather than in an error case.
 
 Sites converted, each with the reason recorded in the source:
 
-- `AcornV2Pair._update` — `timeElapsed` and both price accumulators. Without
+- `PauliV2Pair._update` — `timeElapsed` and both price accumulators. Without
   `unchecked` the pair reverts permanently once the accumulator wraps.
 - `Math.sqrt`, `UQ112x112.encode`.
 - `FullMath.mulDiv` — the entire 512 bit reconstruction. Also
@@ -90,7 +91,7 @@ Sites converted, each with the reason recorded in the source:
 - `SwapMath.computeSwapStep` — `uint256(-amountRemaining)`.
 - `Tick.getFeeGrowthInside` / `Tick.cross`, `Position.update`, the whole of
   `Oracle`, and the fee growth and protocol fee accumulators in
-  `AcornV3Pool.swap` / `flash` / `burn`.
+  `PauliV3Pool.swap` / `flash` / `burn`.
 - `LiquidityMath.addDelta` — see §2.1, this one was caught by a test.
 
 `SafeMath` and `LowGasSafeMath` are therefore redundant. V2's is deleted; V3's
@@ -101,7 +102,7 @@ upstream.
 
 `go-zond/params/protocol_params.go` sets `MaxCodeSize = 24576` and
 `MaxInitCodeSize = 49152`, identical to Ethereum. `hypc` 0.0.2 produces larger
-output than `solc` 0.7.6 for the same sources, and `AcornV3Factory` embeds the
+output than `solc` 0.7.6 for the same sources, and `PauliV3Factory` embeds the
 pool's init code:
 
 | optimizer runs | factory | pool |
@@ -117,7 +118,7 @@ The build uses **200 runs for all of `contracts/v3/`**, leaving the factory abou
 1. `scripts/compile.js` fails the build if any runtime exceeds `MAX_CODE_SIZE` or
    any init code exceeds `MAX_INIT_CODE_SIZE`.
 2. `poolCodeHash()` — a convenience getter added during the port — was removed
-   from `AcornV3Factory` to recover bytes. `AcornV2Factory.pairCodeHash()`
+   from `PauliV3Factory` to recover bytes. `PauliV2Factory.pairCodeHash()`
    is kept; V2 has ample room.
 
 Anyone adding code to the V3 pool or factory should expect to lower the run count
@@ -152,7 +153,7 @@ Fixed by wrapping both branches in `unchecked`. `test/v3/math.test.js` asserts
 
 ### 2.2 CREATE2 init code hashes were placeholders
 
-`AcornV2Library.PAIR_INIT_CODE_HASH` and `PoolAddress.POOL_INIT_CODE_HASH`
+`PauliV2Library.PAIR_INIT_CODE_HASH` and `PoolAddress.POOL_INIT_CODE_HASH`
 are hardcoded constants in Uniswap. A stale value does not fail loudly: the
 router computes an address with no code and calls into nothing.
 
@@ -168,18 +169,18 @@ Handled by:
 - `scripts/deploy.js` re-checks the V2 hash against the live factory and aborts
   on mismatch.
 
-### 2.3 `AcornV2Library.getAmountIn` had no reason string at the boundary
+### 2.3 `PauliV2Library.getAmountIn` had no reason string at the boundary
 
 Upstream reaches a division by zero when `amountOut == reserveOut`. Both
 versions revert, but upstream's gives a bare panic. An explicit
-`require(amountOut < reserveOut, "AcornV2Library: INSUFFICIENT_LIQUIDITY")`
+`require(amountOut < reserveOut, "PauliV2Library: INSUFFICIENT_LIQUIDITY")`
 was added and marked in the source as a deviation.
 
 ---
 
 ## 3. Verification performed
 
-`npm test` — 83 tests, all passing. Contracts are compiled with `hypc` and the
+`npm test` — 122 tests, all passing. Contracts are compiled with `hypc` and the
 resulting QRVM bytecode is executed on a local EVM, which is sound here because
 the bytecode `hypc` emits is standard 256-bit EVM (verified by deploying and
 calling a probe contract before any porting work began).
@@ -188,7 +189,7 @@ What the suite actually pins:
 
 - **V2 pricing is bit exact against Uniswap.** Seven swap cases assert the exact
   output amount Uniswap V2 produces (e.g. 1 in, reserves 5/10 →
-  `1662497915624478906`) and that one wei more reverts with `AcornV2: K`.
+  `1662497915624478906`) and that one wei more reverts with `PauliV2: K`.
 - **V3 tick math is exact.** `getSqrtRatioAtTick` is asserted against reference
   values cross checked with an independent big integer computation, plus
   tick → ratio → tick round trips across the full range and both boundary
@@ -221,22 +222,44 @@ Additionally pinned since the first revision:
   and `snapshotCumulativesInside`.
 - **`NoDelegateCall`**: `swap` and `observe` both fail when reached through a
   `delegatecall`.
-- **V2 flash swap** via `IAcornV2Callee`, including a one wei underpayment
-  reverting with `AcornV2: K`, and reserves matching balances afterwards.
+- **V2 flash swap** via `IPauliV2Callee`, including a one wei underpayment
+  reverting with `PauliV2: K`, and reserves matching balances afterwards.
 - **V2 reentrancy**: a nested call from inside the swap callback hits
-  `AcornV2: LOCKED`.
+  `PauliV2: LOCKED`.
 - **V2 allowance semantics** (infinite vs finite) and the absence of any
   `permit` / `DOMAIN_SEPARATOR` / `nonces` entry in the pair ABI.
 
+Pinned with the position manager (`test/v3/positions.test.js`, 15 tests; the
+suite is 122 in total):
+
+- **Liquidity choice**: `mint` takes exactly the liquidity an independent BigInt
+  port of `LiquidityAmounts` prescribes, and the pool's own position under the
+  manager holds it.
+- **Fee accounting**: a position minted through the manager collects, to the
+  wei, the same fees core pays a twin position of equal liquidity and range
+  minted directly on the pool.
+- `increaseLiquidity` folding accrued fees into `tokensOwed`,
+  `decreaseLiquidity` into `tokensOwed`, partial and full `collect`, `burn`
+  refusing until cleared, and `positions()` reverting after burn.
+- **Authorization**: owner, single token approval, operator approval, and
+  approval cleared by a transfer, on `decreaseLiquidity`, `collect` and `burn`.
+- Enumeration across mint, transfer and burn; `createAndInitializePoolIfNecessary`
+  on a new, an initialized and an uninitialized pool; pool creation plus a
+  native QRL mint plus `refundQRL` in one `multicall`; a forged mint callback;
+  `tokenURI` decoded and checked, including each fee tier.
+- `TickLens` against the pool's own tick data, and `V3Migrator` moving half of
+  a V2 position into V3 with everything burned from V2 accounted for in the
+  pool or the refund.
+
 ### Verified on the live testnet
 
-Acorn V2 is deployed to QRL Zond testnet v2 (chainId 1337):
+Pauli V2 is deployed to QRL Zond testnet v2 (chainId 1337):
 
 | Contract | Address |
 | --- | --- |
 | WQRL (pre-existing, reused) | `Q823b2FAeEbC9e1EE8e20454201502ef0679cC4AE` |
-| `AcornV2Factory` | `QA19FA6B49A10F1B57E303ECE95eF21acE640d312` |
-| `AcornV2Router02` | `QE89663F7f2a4955A82a2852D1624f51569080916` |
+| `PauliV2Factory` | `QA19FA6B49A10F1B57E303ECE95eF21acE640d312` |
+| `PauliV2Router02` | `QE89663F7f2a4955A82a2852D1624f51569080916` |
 
 An earlier deployment under the working name Hyperion Swap
 (`Q2755080D…329263` / `Q0c62B46e…fd63E3`) is superseded and must not be used.
@@ -309,14 +332,16 @@ through this endpoint is therefore about **18,250 bytes**:
 
 | Contract | init code | fits |
 | --- | --- | --- |
-| `AcornV2Factory` | 12,442 | yes |
-| `AcornV2Router02` at 999999 runs | 20,428 | no |
-| `AcornV2Router02` at 200 runs | 15,328 | yes |
+| `PauliV2Factory` | 12,442 | yes |
+| `PauliV2Router02` at 999999 runs | 20,428 | no |
+| `PauliV2Router02` at 200 runs | 15,328 | yes |
 | `SwapRouter` | 8,174 | yes |
 | `Quoter` | 4,181 | yes |
-| `AcornV3Factory` at `runs: 1` | 24,498 | **no** |
+| `NonfungiblePositionManager` | 18,493 | **no**, about 250 bytes over |
+| `PauliV3PositionDescriptor`, `V3Migrator`, `TickLens` | 6,229, 5,717, 1,417 | yes |
+| `PauliV3Factory` at `runs: 1` | 24,498 | **no** |
 
-`AcornV3Factory` embeds the pool's init code, so no optimizer setting brings
+`PauliV3Factory` embeds the pool's init code, so no optimizer setting brings
 it under the cap.
 
 **V3 deployment is therefore parked on infrastructure, not on the code.** The
@@ -360,22 +385,54 @@ because the available RPC endpoint answers no state queries.
 
 ---
 
-## 4. Deliberately not ported
+## 4. Position NFTs, and what is still not ported
+
+The first revision of this review left the position manager out, which meant
+V3 liquidity could only be added by a custom contract implementing
+`pauliV3MintCallback`. It is now ported, with the rest of what a V3 front end
+needs:
+
+| Upstream (v3-periphery 1.3.0) | Here | Changes |
+| --- | --- | --- |
+| `NonfungiblePositionManager` | same name | No permit (§1.1). Token base is qrl-contracts' `SQRCTN1` + `SQRCTN1Enumerable` instead of OpenZeppelin 3.4 `ERC721`, see below |
+| `LiquidityManagement`, `PoolInitializer`, `LiquidityAmounts`, `PositionKey` | same names | none beyond the callback name |
+| `NonfungibleTokenPositionDescriptor` + `NFTDescriptor` + `NFTSVG` | `PauliV3PositionDescriptor` | Same `tokenURI(positionManager, tokenId)` interface and a `data:application/json;base64` URI with `name` and `description`, but no SVG `image` |
+| `V3Migrator` | same name | No `SelfPermit`; `refundAsETH` is `refundAsQRL` |
+| `TickLens` | same name | none |
+| `IPeripheryImmutableState` | added | `PeripheryImmutableState` now implements it, as upstream; ABI unchanged |
+
+Adapting the position manager to an OpenZeppelin 5 shaped token base:
+
+- **Approvals.** Upstream packs the approved operator into `Position` next to
+  the permit nonce, by overriding `_approve` and `getApproved`. With no permit
+  there is no nonce to pack against, so approvals stay in `SQRCTN1`'s own
+  mapping and `positions()` reads the operator from there. `nonce` is still
+  returned, always `0`, so the 12 field return shape integrators decode is
+  unchanged.
+- **Authorization.** `isAuthorizedForToken` uses `_isAuthorized(_ownerOf(id),
+  msg.sender, id)` in place of `_isApprovedOrOwner`. A missing token now fails
+  with `Not approved` rather than OpenZeppelin 3.4's nonexistent token string.
+- **Enumeration.** `tokenOfOwnerByIndex`, `tokenByIndex` and `totalSupply` are
+  how wallets list positions without an indexer. The published
+  `@theqrl/qrl-contracts` 0.1.0 has no enumerable extension; it is vendored
+  verbatim from the library's `main` (`contracts/vendor/`).
+- **Arithmetic.** The `tokensOwed` and fee growth updates are `unchecked`, for
+  the same reason as §1.3: upstream relies on 0.7.6 wrapping for the
+  `feeGrowthInside` difference.
+- **Custom errors through `multicall`.** `SQRCTN1` reverts with custom errors.
+  `Multicall` re-raises only `Error(string)`, as upstream does, so a custom
+  error inside a multicall still reverts but loses its data. The position
+  manager's own errors are strings and pass through.
+
+Still not ported:
 
 | Upstream contract | Reason |
 | --- | --- |
 | `SelfPermit`, `ERC721Permit` | Require `ecrecover` (§1.1) |
-| `NonfungiblePositionManager`, `LiquidityManagement`, `PoolInitializer` | Needs an SQRC-TN1 base and a descriptor; deferred |
-| `NonfungibleTokenPositionDescriptor`, `NFTDescriptor`, `NFTSVG` | On chain SVG rendering; large, and blocked on the above |
-| `V3Migrator` | Depends on the position manager |
-| `QuoterV2`, `TickLens`, `PositionValue`, `OracleLibrary` | Lens contracts, not required for swapping or liquidity |
+| `NFTDescriptor`, `NFTSVG` (the SVG image) | Large, assembly over 32 byte words, and cosmetic; the descriptor above keeps the interface so a renderer can be added behind it |
+| `QuoterV2`, `PositionValue`, `OracleLibrary` | `Quoter` covers quoting; the other two are integrator libraries, not deployed contracts |
 | `UniswapV2Migrator`, V1 interfaces | No V1 on this chain |
 | `PeripheryPaymentsWithFee` | Optional fee-on-swap; not required |
-
-Without a position manager, V3 liquidity must be provided by calling
-`AcornV3Pool.mint` from a contract that implements
-`acornV3MintCallback`. `contracts/test/AcornV3PoolCaller.hyp` shows the
-shape but is a test fixture, not production code.
 
 ---
 
@@ -389,7 +446,7 @@ describing addresses as `Q` followed by 128 hex characters. The released
 compiler this port is built with is on the 20-byte `Z` model — `hypc` 0.0.2
 rejects both `Q`+128 and `Z`+128 literals and has no `uint512` type. If the
 testnet moves to 64-byte addresses, `CREATE2` derivation, `abi.encodePacked`
-packing in `PoolAddress` / `AcornV2Library` / `Position.get`, and the 20-byte
+packing in `PoolAddress` / `PauliV2Library` / `Position.get`, and the 20-byte
 assumption in `BytesLib.toAddress` and the swap `Path` encoding all break at
 once. Re-verify against the toolchain before any mainnet consideration.
 

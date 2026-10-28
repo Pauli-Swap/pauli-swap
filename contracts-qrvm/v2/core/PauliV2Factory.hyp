@@ -1,0 +1,62 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+pragma hyperion >=0.0;
+
+import {IPauliV2Factory} from "./interfaces/IPauliV2Factory.hyp";
+import {IPauliV2Pair} from "./interfaces/IPauliV2Pair.hyp";
+import {PauliV2Pair} from "./PauliV2Pair.hyp";
+
+contract PauliV2Factory is IPauliV2Factory {
+    address public feeTo;
+    address public feeToSetter;
+
+    // QRVM: private behind an explicit view, the auto-getter reads the wrong
+    // slot for `address` keys (OC-V3-02, docs/QRVM.md).
+    mapping(address => mapping(address => address)) private _getPair;
+    address[] public allPairs;
+
+    constructor(address _feeToSetter) {
+        feeToSetter = _feeToSetter;
+    }
+
+    function getPair(address tokenA, address tokenB) external view returns (address) {
+        return _getPair[tokenA][tokenB];
+    }
+
+    function allPairsLength() external view returns (uint256) {
+        return allPairs.length;
+    }
+
+    /// @notice keccak256 of the pair creation code. On QIP-55 a CREATE2 address is
+    /// Keccak-512 over a domain tag, the 64 byte deployer, the 64 byte salt and
+    /// this hash, which only off chain code can compute; see docs/QRVM.md.
+    function pairCodeHash() external pure returns (bytes32) {
+        return keccak256(type(PauliV2Pair).creationCode);
+    }
+
+    function createPair(address tokenA, address tokenB) external returns (address pair) {
+        require(tokenA != tokenB, "PauliV2: IDENTICAL_ADDRESSES");
+        (address token0, address token1) = tokenA < tokenB ? (tokenA, tokenB) : (tokenB, tokenA);
+        require(token0 != address(0), "PauliV2: ZERO_ADDRESS");
+        require(_getPair[token0][token1] == address(0), "PauliV2: PAIR_EXISTS");
+        bytes32 salt = keccak256(abi.encodePacked(token0, token1));
+        // QRVM: upstream's assembly CREATE2 hardcodes a 32 byte length word;
+        // memory words are 64 bytes here, so the compiler emits the CREATE2.
+        // A failed creation reverts instead of returning the zero address.
+        pair = address(new PauliV2Pair{salt: salt}());
+        IPauliV2Pair(pair).initialize(token0, token1);
+        _getPair[token0][token1] = pair;
+        _getPair[token1][token0] = pair;
+        allPairs.push(pair);
+        emit PairCreated(token0, token1, pair, allPairs.length);
+    }
+
+    function setFeeTo(address _feeTo) external {
+        require(msg.sender == feeToSetter, "PauliV2: FORBIDDEN");
+        feeTo = _feeTo;
+    }
+
+    function setFeeToSetter(address _feeToSetter) external {
+        require(msg.sender == feeToSetter, "PauliV2: FORBIDDEN");
+        feeToSetter = _feeToSetter;
+    }
+}

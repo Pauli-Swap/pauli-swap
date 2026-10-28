@@ -1,0 +1,73 @@
+// SPDX-License-Identifier: BUSL-1.1
+pragma hyperion >=0.0;
+
+import {IPauliV3Pool} from "../../core/interfaces/IPauliV3Pool.hyp";
+import {TickMath} from "../../core/libraries/TickMath.hyp";
+
+/// @title Pool views moved out of the pool on QRVM
+/// @notice Serves `snapshotCumulativesInside`, which upstream implements on the
+/// pool. On QRVM the pool does not fit under MaxCodeSize with it; see
+/// docs/QRVM.md. The result is the same as upstream's within the same block:
+/// every input is public pool state, and `observe([0])` is the
+/// `observeSingle(time, 0, ...)` call upstream makes.
+contract PauliV3PoolLens {
+    struct Outside {
+        int56 tickCumulative;
+        uint160 secondsPerLiquidityX128;
+        uint32 secondsOutside;
+    }
+
+    function outside(IPauliV3Pool pool, int24 tick) private view returns (Outside memory o) {
+        bool initialized;
+        (,,,, o.tickCumulative, o.secondsPerLiquidityX128, o.secondsOutside, initialized) = pool.ticks(tick);
+        require(initialized);
+    }
+
+    function snapshotCumulativesInside(IPauliV3Pool pool, int24 tickLower, int24 tickUpper)
+        external
+        view
+        returns (int56 tickCumulativeInside, uint160 secondsPerLiquidityInsideX128, uint32 secondsInside)
+    {
+        require(tickLower < tickUpper, "TLU");
+        require(tickLower >= TickMath.MIN_TICK, "TLM");
+        require(tickUpper <= TickMath.MAX_TICK, "TUM");
+
+        Outside memory lower = outside(pool, tickLower);
+        Outside memory upper = outside(pool, tickUpper);
+        (, int24 tick,,,,,) = pool.slot0();
+
+        // Every value below is a wrapping accumulator difference.
+        unchecked {
+            if (tick < tickLower) {
+                return (
+                    lower.tickCumulative - upper.tickCumulative,
+                    lower.secondsPerLiquidityX128 - upper.secondsPerLiquidityX128,
+                    lower.secondsOutside - upper.secondsOutside
+                );
+            } else if (tick < tickUpper) {
+                (int56 tickCumulative, uint160 secondsPerLiquidityCumulativeX128) = current(pool);
+                return (
+                    tickCumulative - lower.tickCumulative - upper.tickCumulative,
+                    secondsPerLiquidityCumulativeX128 - lower.secondsPerLiquidityX128 - upper.secondsPerLiquidityX128,
+                    uint32(block.timestamp) - lower.secondsOutside - upper.secondsOutside
+                );
+            } else {
+                return (
+                    upper.tickCumulative - lower.tickCumulative,
+                    upper.secondsPerLiquidityX128 - lower.secondsPerLiquidityX128,
+                    upper.secondsOutside - lower.secondsOutside
+                );
+            }
+        }
+    }
+
+    function current(IPauliV3Pool pool)
+        private
+        view
+        returns (int56 tickCumulative, uint160 secondsPerLiquidityCumulativeX128)
+    {
+        uint32[] memory secondsAgos = new uint32[](1);
+        (int56[] memory tickCumulatives, uint160[] memory secondsPerLiquidityCumulativeX128s) = pool.observe(secondsAgos);
+        return (tickCumulatives[0], secondsPerLiquidityCumulativeX128s[0]);
+    }
+}

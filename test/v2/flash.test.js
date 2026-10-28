@@ -5,14 +5,14 @@ const { deploy, artifactOf, expandTo18Decimals, MINIMUM_LIQUIDITY, MaxUint256 } 
 
 async function fixture() {
   const [wallet, other] = await ethers.getSigners();
-  const factory = await deploy('AcornV2Factory', [wallet.address], wallet);
+  const factory = await deploy('PauliV2Factory', [wallet.address], wallet);
 
   const tokenA = await deploy('TestSQRCTF1', [expandTo18Decimals(100000)], wallet);
   const tokenB = await deploy('TestSQRCTF1', [expandTo18Decimals(100000)], wallet);
 
   await factory.createPair(await tokenA.getAddress(), await tokenB.getAddress());
   const pair = await ethers.getContractAt(
-    artifactOf('AcornV2Pair').abi,
+    artifactOf('PauliV2Pair').abi,
     await factory.getPair(await tokenA.getAddress(), await tokenB.getAddress()),
     wallet
   );
@@ -25,14 +25,14 @@ async function fixture() {
   await token1.transfer(await pair.getAddress(), amount);
   await pair.mint(wallet.address);
 
-  const borrower = await deploy('AcornV2FlashBorrower', [], wallet);
+  const borrower = await deploy('PauliV2FlashBorrower', [], wallet);
   await token0.approve(await borrower.getAddress(), MaxUint256);
   await token1.approve(await borrower.getAddress(), MaxUint256);
 
   return { factory, pair, token0, token1, borrower, wallet, other };
 }
 
-describe('AcornV2Pair flash swap', () => {
+describe('PauliV2Pair flash swap', () => {
   it('lends token0 and accepts repayment in token1 inside the callback', async () => {
     const { pair, token0, token1, borrower, wallet } = await loadFixture(fixture);
 
@@ -51,7 +51,7 @@ describe('AcornV2Pair flash swap', () => {
 
     await borrower.setRepayShort(true);
     await expect(borrower.flashSwap(await pair.getAddress(), expandTo18Decimals(1), 0)).to.be.revertedWith(
-      'AcornV2: K'
+      'PauliV2: K'
     );
   });
 
@@ -66,13 +66,13 @@ describe('AcornV2Pair flash swap', () => {
   });
 });
 
-describe('AcornV2Pair invariants', () => {
+describe('PauliV2Pair invariants', () => {
   it('holds the lock against a reentrant call from the callback', async () => {
     const { pair, borrower } = await loadFixture(fixture);
     // The borrower re-enters through transferFrom on a token, not the pair, so
     // the direct check is that a nested swap on the locked pair reverts.
-    const reentrant = await deploy('AcornV2ReentrancyProbe', [], (await ethers.getSigners())[0]);
-    await expect(reentrant.attack(await pair.getAddress())).to.be.revertedWith('AcornV2: LOCKED');
+    const reentrant = await deploy('PauliV2ReentrancyProbe', [], (await ethers.getSigners())[0]);
+    await expect(reentrant.attack(await pair.getAddress())).to.be.revertedWith('PauliV2: LOCKED');
     expect(await borrower.repayShort()).to.equal(false);
   });
 

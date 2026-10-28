@@ -1,0 +1,361 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+pragma hyperion >=0.0;
+
+import {SQRCTN1} from "@theqrl/qrl-contracts/token/SQRCTN1/SQRCTN1.hyp";
+import {ISQRCTN1Metadata} from "@theqrl/qrl-contracts/token/SQRCTN1/extensions/ISQRCTN1Metadata.hyp";
+import {SQRCTN1Enumerable} from "../../vendor/SQRCTN1Enumerable.hyp";
+import {IPauliV3Pool} from "../core/interfaces/IPauliV3Pool.hyp";
+import {FixedPoint128} from "../core/libraries/FixedPoint128.hyp";
+import {FullMath} from "../core/libraries/FullMath.hyp";
+import {INonfungiblePositionManager} from "./interfaces/INonfungiblePositionManager.hyp";
+import {INonfungibleTokenPositionDescriptor} from "./interfaces/INonfungibleTokenPositionDescriptor.hyp";
+import {PositionKey} from "./libraries/PositionKey.hyp";
+import {PoolAddress} from "./libraries/PoolAddress.hyp";
+import {LiquidityManagement} from "./base/LiquidityManagement.hyp";
+import {PeripheryImmutableState} from "./base/PeripheryImmutableState.hyp";
+import {Multicall} from "./base/Multicall.hyp";
+import {PeripheryValidation} from "./base/PeripheryValidation.hyp";
+import {PoolInitializer} from "./base/PoolInitializer.hyp";
+
+/// @title NFT positions
+/// @notice Wraps Pauli V3 positions in the SQRC-TN1 non-fungible token interface
+/// @dev Port of Uniswap's NonfungiblePositionManager with two structural
+/// changes. ERC721Permit and SelfPermit are dropped because they need
+/// ecrecover, which Zond does not provide. The token base is qrl-contracts'
+/// SQRCTN1, which is OpenZeppelin 5 shaped where upstream builds on
+/// OpenZeppelin 3.4: approvals stay in the base's own mapping instead of being
+/// packed into Position next to the permit nonce, and `positions()` reads the
+/// operator from there.
+contract NonfungiblePositionManager is
+    INonfungiblePositionManager,
+    Multicall,
+    SQRCTN1Enumerable,
+    PeripheryImmutableState,
+    PoolInitializer,
+    LiquidityManagement,
+    PeripheryValidation
+{
+    // details about the pauli position
+    struct Position {
+        // the ID of the pool with which this token is connected
+        uint80 poolId;
+        // the tick range of the position
+        int24 tickLower;
+        int24 tickUpper;
+        // the liquidity of the position
+        uint128 liquidity;
+        // the fee growth of the aggregate position as of the last action on the individual position
+        uint256 feeGrowthInside0LastX128;
+        uint256 feeGrowthInside1LastX128;
+        // how many uncollected tokens are owed to the position, as of the last computation
+        uint128 tokensOwed0;
+        uint128 tokensOwed1;
+    }
+
+    /// @dev IDs of pools assigned by this contract
+    mapping(address => uint80) private _poolIds;
+
+    /// @dev Pool keys by pool ID, to save on SSTOREs for position data
+    mapping(uint80 => PoolAddress.PoolKey) private _poolIdToPoolKey;
+
+    /// @dev The token ID position data
+    mapping(uint256 => Position) private _positions;
+
+    /// @dev The ID of the next token that will be minted. Skips 0
+    uint176 private _nextId = 1;
+    /// @dev The ID of the next pool that is used for the first time. Skips 0
+    uint80 private _nextPoolId = 1;
+
+    /// @dev The address of the token descriptor contract, which handles generating token URIs for position tokens
+    address private immutable _tokenDescriptor;
+
+    constructor(address _factory, address _WQRL9, address _tokenDescriptor_)
+        SQRCTN1("Pauli V3 Positions NFT-V1", "PAULI-V3-POS")
+        PeripheryImmutableState(_factory, _WQRL9)
+    {
+        _tokenDescriptor = _tokenDescriptor_;
+    }
+
+    /// @inheritdoc INonfungiblePositionManager
+    function positions(uint256 tokenId)
+        external
+        view
+        override
+        returns (
+            uint96 nonce,
+            address operator,
+            address token0,
+            address token1,
+            uint24 fee,
+            int24 tickLower,
+            int24 tickUpper,
+            uint128 liquidity,
+            uint256 feeGrowthInside0LastX128,
+            uint256 feeGrowthInside1LastX128,
+            uint128 tokensOwed0,
+            uint128 tokensOwed1
+        )
+    {
+        // Assigned field by field: upstream's single return tuple is stack too
+        // deep once the operator comes from a call instead of the struct.
+        Position storage position = _positions[tokenId];
+        require(position.poolId != 0, "Invalid token ID");
+        PoolAddress.PoolKey storage poolKey = _poolIdToPoolKey[position.poolId];
+        operator = _getApproved(tokenId);
+        token0 = poolKey.token0;
+        token1 = poolKey.token1;
+        fee = poolKey.fee;
+        tickLower = position.tickLower;
+        tickUpper = position.tickUpper;
+        liquidity = position.liquidity;
+        feeGrowthInside0LastX128 = position.feeGrowthInside0LastX128;
+        feeGrowthInside1LastX128 = position.feeGrowthInside1LastX128;
+        tokensOwed0 = position.tokensOwed0;
+        tokensOwed1 = position.tokensOwed1;
+    }
+
+    /// @dev Caches a pool key
+    function cachePoolKey(address pool, PoolAddress.PoolKey memory poolKey) private returns (uint80 poolId) {
+        poolId = _poolIds[pool];
+        if (poolId == 0) {
+            _poolIds[pool] = (poolId = _nextPoolId++);
+            _poolIdToPoolKey[poolId] = poolKey;
+        }
+    }
+
+    /// @inheritdoc INonfungiblePositionManager
+    function mint(MintParams calldata params)
+        external
+        payable
+        override
+        checkDeadline(params.deadline)
+        returns (uint256 tokenId, uint128 liquidity, uint256 amount0, uint256 amount1)
+    {
+        IPauliV3Pool pool;
+        (liquidity, amount0, amount1, pool) = addLiquidity(
+            AddLiquidityParams({
+                token0: params.token0,
+                token1: params.token1,
+                fee: params.fee,
+                recipient: address(this),
+                tickLower: params.tickLower,
+                tickUpper: params.tickUpper,
+                amount0Desired: params.amount0Desired,
+                amount1Desired: params.amount1Desired,
+                amount0Min: params.amount0Min,
+                amount1Min: params.amount1Min
+            })
+        );
+
+        _mint(params.recipient, (tokenId = _nextId++));
+
+        bytes32 positionKey = PositionKey.compute(address(this), params.tickLower, params.tickUpper);
+        (, uint256 feeGrowthInside0LastX128, uint256 feeGrowthInside1LastX128,,) = pool.positions(positionKey);
+
+        // idempotent set
+        uint80 poolId = cachePoolKey(
+            address(pool), PoolAddress.PoolKey({token0: params.token0, token1: params.token1, fee: params.fee})
+        );
+
+        _positions[tokenId] = Position({
+            poolId: poolId,
+            tickLower: params.tickLower,
+            tickUpper: params.tickUpper,
+            liquidity: liquidity,
+            feeGrowthInside0LastX128: feeGrowthInside0LastX128,
+            feeGrowthInside1LastX128: feeGrowthInside1LastX128,
+            tokensOwed0: 0,
+            tokensOwed1: 0
+        });
+
+        emit IncreaseLiquidity(tokenId, liquidity, amount0, amount1);
+    }
+
+    modifier isAuthorizedForToken(uint256 tokenId) {
+        require(_isAuthorized(_ownerOf(tokenId), msg.sender, tokenId), "Not approved");
+        _;
+    }
+
+    function tokenURI(uint256 tokenId) public view override(SQRCTN1, ISQRCTN1Metadata) returns (string memory) {
+        require(_ownerOf(tokenId) != address(0));
+        return INonfungibleTokenPositionDescriptor(_tokenDescriptor).tokenURI(this, tokenId);
+    }
+
+    /// @inheritdoc INonfungiblePositionManager
+    function increaseLiquidity(IncreaseLiquidityParams calldata params)
+        external
+        payable
+        override
+        checkDeadline(params.deadline)
+        returns (uint128 liquidity, uint256 amount0, uint256 amount1)
+    {
+        Position storage position = _positions[params.tokenId];
+
+        PoolAddress.PoolKey memory poolKey = _poolIdToPoolKey[position.poolId];
+
+        IPauliV3Pool pool;
+        (liquidity, amount0, amount1, pool) = addLiquidity(
+            AddLiquidityParams({
+                token0: poolKey.token0,
+                token1: poolKey.token1,
+                fee: poolKey.fee,
+                tickLower: position.tickLower,
+                tickUpper: position.tickUpper,
+                amount0Desired: params.amount0Desired,
+                amount1Desired: params.amount1Desired,
+                amount0Min: params.amount0Min,
+                amount1Min: params.amount1Min,
+                recipient: address(this)
+            })
+        );
+
+        bytes32 positionKey = PositionKey.compute(address(this), position.tickLower, position.tickUpper);
+
+        // this is now updated to the current transaction
+        (, uint256 feeGrowthInside0LastX128, uint256 feeGrowthInside1LastX128,,) = pool.positions(positionKey);
+
+        // Upstream (0.7.6) wraps here: fee growth inside is a modular
+        // difference, and tokensOwed overflowing is accepted as the owner's
+        // problem for not collecting before type(uint128).max.
+        unchecked {
+            position.tokensOwed0 += uint128(
+                FullMath.mulDiv(
+                    feeGrowthInside0LastX128 - position.feeGrowthInside0LastX128, position.liquidity, FixedPoint128.Q128
+                )
+            );
+            position.tokensOwed1 += uint128(
+                FullMath.mulDiv(
+                    feeGrowthInside1LastX128 - position.feeGrowthInside1LastX128, position.liquidity, FixedPoint128.Q128
+                )
+            );
+        }
+
+        position.feeGrowthInside0LastX128 = feeGrowthInside0LastX128;
+        position.feeGrowthInside1LastX128 = feeGrowthInside1LastX128;
+        position.liquidity += liquidity;
+
+        emit IncreaseLiquidity(params.tokenId, liquidity, amount0, amount1);
+    }
+
+    /// @inheritdoc INonfungiblePositionManager
+    function decreaseLiquidity(DecreaseLiquidityParams calldata params)
+        external
+        payable
+        override
+        isAuthorizedForToken(params.tokenId)
+        checkDeadline(params.deadline)
+        returns (uint256 amount0, uint256 amount1)
+    {
+        require(params.liquidity > 0);
+        Position storage position = _positions[params.tokenId];
+
+        uint128 positionLiquidity = position.liquidity;
+        require(positionLiquidity >= params.liquidity);
+
+        PoolAddress.PoolKey memory poolKey = _poolIdToPoolKey[position.poolId];
+        IPauliV3Pool pool = IPauliV3Pool(PoolAddress.computeAddress(factory, poolKey));
+        (amount0, amount1) = pool.burn(position.tickLower, position.tickUpper, params.liquidity);
+
+        require(amount0 >= params.amount0Min && amount1 >= params.amount1Min, "Price slippage check");
+
+        bytes32 positionKey = PositionKey.compute(address(this), position.tickLower, position.tickUpper);
+        // this is now updated to the current transaction
+        (, uint256 feeGrowthInside0LastX128, uint256 feeGrowthInside1LastX128,,) = pool.positions(positionKey);
+
+        // Wrapping as upstream, see increaseLiquidity.
+        unchecked {
+            position.tokensOwed0 += uint128(amount0)
+                + uint128(
+                    FullMath.mulDiv(
+                        feeGrowthInside0LastX128 - position.feeGrowthInside0LastX128, positionLiquidity, FixedPoint128.Q128
+                    )
+                );
+            position.tokensOwed1 += uint128(amount1)
+                + uint128(
+                    FullMath.mulDiv(
+                        feeGrowthInside1LastX128 - position.feeGrowthInside1LastX128, positionLiquidity, FixedPoint128.Q128
+                    )
+                );
+        }
+
+        position.feeGrowthInside0LastX128 = feeGrowthInside0LastX128;
+        position.feeGrowthInside1LastX128 = feeGrowthInside1LastX128;
+        // subtraction is safe because we checked positionLiquidity is gte params.liquidity
+        position.liquidity = positionLiquidity - params.liquidity;
+
+        emit DecreaseLiquidity(params.tokenId, params.liquidity, amount0, amount1);
+    }
+
+    /// @inheritdoc INonfungiblePositionManager
+    function collect(CollectParams calldata params)
+        external
+        payable
+        override
+        isAuthorizedForToken(params.tokenId)
+        returns (uint256 amount0, uint256 amount1)
+    {
+        require(params.amount0Max > 0 || params.amount1Max > 0);
+        // allow collecting to the nft position manager address with address 0
+        address recipient = params.recipient == address(0) ? address(this) : params.recipient;
+
+        Position storage position = _positions[params.tokenId];
+
+        PoolAddress.PoolKey memory poolKey = _poolIdToPoolKey[position.poolId];
+
+        IPauliV3Pool pool = IPauliV3Pool(PoolAddress.computeAddress(factory, poolKey));
+
+        (uint128 tokensOwed0, uint128 tokensOwed1) = (position.tokensOwed0, position.tokensOwed1);
+
+        // trigger an update of the position fees owed and fee growth snapshots if it has any liquidity
+        if (position.liquidity > 0) {
+            pool.burn(position.tickLower, position.tickUpper, 0);
+            (, uint256 feeGrowthInside0LastX128, uint256 feeGrowthInside1LastX128,,) =
+                pool.positions(PositionKey.compute(address(this), position.tickLower, position.tickUpper));
+
+            // Wrapping as upstream, see increaseLiquidity.
+            unchecked {
+                tokensOwed0 += uint128(
+                    FullMath.mulDiv(
+                        feeGrowthInside0LastX128 - position.feeGrowthInside0LastX128,
+                        position.liquidity,
+                        FixedPoint128.Q128
+                    )
+                );
+                tokensOwed1 += uint128(
+                    FullMath.mulDiv(
+                        feeGrowthInside1LastX128 - position.feeGrowthInside1LastX128,
+                        position.liquidity,
+                        FixedPoint128.Q128
+                    )
+                );
+            }
+
+            position.feeGrowthInside0LastX128 = feeGrowthInside0LastX128;
+            position.feeGrowthInside1LastX128 = feeGrowthInside1LastX128;
+        }
+
+        // compute the arguments to give to the pool#collect method
+        (uint128 amount0Collect, uint128 amount1Collect) = (
+            params.amount0Max > tokensOwed0 ? tokensOwed0 : params.amount0Max,
+            params.amount1Max > tokensOwed1 ? tokensOwed1 : params.amount1Max
+        );
+
+        // the actual amounts collected are returned
+        (amount0, amount1) =
+            pool.collect(recipient, position.tickLower, position.tickUpper, amount0Collect, amount1Collect);
+
+        // sometimes there will be a few less wei than expected due to rounding down in core, but we just subtract the full amount expected
+        // instead of the actual amount so we can burn the token
+        (position.tokensOwed0, position.tokensOwed1) = (tokensOwed0 - amount0Collect, tokensOwed1 - amount1Collect);
+
+        emit Collect(params.tokenId, recipient, amount0Collect, amount1Collect);
+    }
+
+    /// @inheritdoc INonfungiblePositionManager
+    function burn(uint256 tokenId) external payable override isAuthorizedForToken(tokenId) {
+        Position storage position = _positions[tokenId];
+        require(position.liquidity == 0 && position.tokensOwed0 == 0 && position.tokensOwed1 == 0, "Not cleared");
+        delete _positions[tokenId];
+        _burn(tokenId);
+    }
+}

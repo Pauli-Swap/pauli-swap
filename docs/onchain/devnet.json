@@ -1,0 +1,1442 @@
+{
+  "network": "devnet",
+  "chainId": 3151908,
+  "blocks": [
+    1859,
+    1960
+  ],
+  "ranAt": "2026-10-27T09:33:45.377Z",
+  "deployment": {
+    "network": "devnet",
+    "chainId": 3151908,
+    "deployer": "Qa1A64D6E760C3f3213771Aa45189126d6afeB5f26F6E6e9844ed42B2c7D388c009Ef9a59CcBD9D8cDcF27CBAf7eC0057cf4A75D61434C323a428A01a2a9234Ca",
+    "startBlock": 1577,
+    "contracts": {
+      "WQRL": "Q8Ff9690B2164C6Ca0250a6515c29b364926F3481b07f3749490E99706FF033833391B235913966fA1F19796F84e78Bc7C44999AFE3249871a3CEBDe10C0BcAaC",
+      "AcornV2Factory": "Q710abD658c774D515e93D41C2C233478b45187f6c7c315E110b3800CBa8f045c78490e458C01B59D4133EcAC1a1d13dC7470D32F360450F032b873dC0c9aA2fE",
+      "AcornV2Router02": "Q504690136d09F97A3c33326B0Ba0f9803C4a8F2eda7Db4fb88c95246f17782a0087F3AAd839121f366ae807e77C1aB1b70558dd32dcB6e914cc8b776227217f9",
+      "Oracle": "QE3bA8a51C2aC641a0332F8337259Fd0c1821DC8682c552Cc5b70bCBED32658136936033bb86D34012Bb09d07b021cE029aC7e73Ce34cCE9647032cAB7F0298DB",
+      "PoolCodeChunkA": "Q0eD673bFB781bC39A42855018006f23A9c97f561778980aDCE5F82ac11E5d14499d10CcDe8e0A39B94DC75FEAa023808F5Ee3865ceC218E46e3757b800D30Ad3",
+      "PoolCodeChunkB": "Q2Ed1DCAC5f77FdE7007179c9A10B25Fea4cDF984f0A81A5bD7bbe26A21C916dE9FAD5e28F8A568289D960a044Ba1a5e01deCb6BC344a96D97d3E86C465eD5ddA",
+      "AcornV3Factory": "Q40Df62717613DdC2227393Db9ecC7624219BBee19fF417700a862967562D9FFE10FFF2bE9AC9AA73F6a557C70CD79Bb5825f0626940b8EF7f10Afdc10342Eec2",
+      "SwapRouter": "Q22818bB98993694f248BA559DAe02900323937f88444770bBe17069C545a553aD15ab6C5099Ef569600ba24D63A4AeE65CCD915765b4B09A23bD6acdC8895641",
+      "Quoter": "Qa6736BF85B6b4253595D364ED314B5fDDA89D6c5b666F5F22E134746F4A64eD34B6cd6408B9CC89Debf5F14c4853818F3D4f806BA43d9CA8F87c9f042002B006",
+      "AcornV3PoolLens": "Q79E8861B0D02CE2688a0E518194Fcb422eE84D529548B663D3c231FE580AD98960C01EAcAAd9eDe152d56da1C74E0f3E683782636389FA691675814A15780DF4",
+      "AcornV3PositionDescriptor": "Q00acD7c8D652bAEa3ff60dDbaa9A6d4Fe904F7bEa9c2cB2B588C116Bc4ef9D77dBD294fEcA0614F4D862aC17B4BAae37AbEd4A2EF98220cd092E9F0a5Ee0E46E",
+      "NonfungiblePositionManager": "Q659889778c4131822e83209A56Ed9640F5791081729f1558aAF3bB703d56D8F8de302C724c96F058020F3dD42D587fF6f9ABfe966cA501261948Def8a539a6Af",
+      "TickLens": "Q5Fb25E0040024429ad9315B9e94BE20648A74d9dE44915fa091197E8305CD21f5e756F9c62Fb59E6820A50A7a3c3Df24BE0d6772aBe91214146894773aC43051",
+      "V3Migrator": "Q99394CB95b706b165580b269fBD728fEeb3edA163ccAa0AaeaF7C77Fb451177405F15Fd8393a633fD1725aa722d733c971767D9536339CF3693b4E5e27d4Dd45"
+    },
+    "codeHashes": {
+      "AcornV2Pair": "0x158ab696b1ddf8b3e63a4ec47f071460abef6672977888dd52bf1c876ad823cf",
+      "AcornV3Pool": "0x3ba421e7e8add6fd0a9895fce53dff3cef98d6d58970565877466ddb352fd1e3"
+    },
+    "endBlock": 1591,
+    "deployedAt": "2026-10-27T08:08:35.413Z",
+    "transactions": [
+      {
+        "label": "deploy WQRL",
+        "hash": "0x12cd8a8b8f148f8565d14ff126d9b24f92d8829636ba24f03326eaa52a688dd0",
+        "block": 1578,
+        "gasUsed": 700686
+      },
+      {
+        "label": "deploy AcornV2Factory",
+        "hash": "0xafdb82185158e081ce796752de9228e12dddeba82804081ce55a42a3244871e9",
+        "block": 1579,
+        "gasUsed": 3878155
+      },
+      {
+        "label": "deploy AcornV2Router02",
+        "hash": "0x1ba05459c6fe5841adbd2586598f73b45abebcb7a975b916b7991d38343d37e2",
+        "block": 1580,
+        "gasUsed": 3821607
+      },
+      {
+        "label": "deploy Oracle",
+        "hash": "0xdc496f2a72740c860c9353ba0777de02e586a186de9eea6d2da890a265782bb8",
+        "block": 1581,
+        "gasUsed": 939862
+      },
+      {
+        "label": "deploy pool code chunk A",
+        "hash": "0x9a2cceb09e45a9fb70888d15cdcc420f4e2091ed363ee8dd9f9e6c6bc1983e37",
+        "block": 1582,
+        "gasUsed": 2679178
+      },
+      {
+        "label": "deploy pool code chunk B",
+        "hash": "0x2e2a6b265bcab0362ca0c5c79ecf4a959fd056c96ff91ceda05e95702db7ba12",
+        "block": 1583,
+        "gasUsed": 2690122
+      },
+      {
+        "label": "deploy AcornV3Factory",
+        "hash": "0x34ca5143c9dc32e6900bb56257cc46c2156a1b22e6d6009df63810290a100dd3",
+        "block": 1584,
+        "gasUsed": 669394
+      },
+      {
+        "label": "deploy SwapRouter",
+        "hash": "0x3a4adb4e7d98509042298a4c38083ec3ae9533a83f7a7d8b2cbbbc747a7f7b8c",
+        "block": 1585,
+        "gasUsed": 1987079
+      },
+      {
+        "label": "deploy Quoter",
+        "hash": "0x1109a85d8af69aa8db14f12752ef40d733db1b653cfa11d56f003271ba7875c4",
+        "block": 1586,
+        "gasUsed": 1006994
+      },
+      {
+        "label": "deploy AcornV3PoolLens",
+        "hash": "0x1ee2ba316b5d31166f3dc1e1f81f462666e31a444bfe894951b4f7cc3a6cfe65",
+        "block": 1587,
+        "gasUsed": 526395
+      },
+      {
+        "label": "deploy AcornV3PositionDescriptor",
+        "hash": "0x178f08d3a9ece292fb0f32dfd74997c45966a256247b64d07bb432f04cba724d",
+        "block": 1588,
+        "gasUsed": 1543125
+      },
+      {
+        "label": "deploy NonfungiblePositionManager",
+        "hash": "0xcc8fd74234f602b3b81cf84a218b8bd0b94af9627d89c28e3b22aa46f175297a",
+        "block": 1589,
+        "gasUsed": 4316553
+      },
+      {
+        "label": "deploy TickLens",
+        "hash": "0x1d9378350ae5dfdbe6c2c242169ec71e54c5e29ae5a305553519dce65674f6ae",
+        "block": 1590,
+        "gasUsed": 396344
+      },
+      {
+        "label": "deploy V3Migrator",
+        "hash": "0xd9e86f0c55f573c59701c7c1f72924a42ce79141a28cbb667b1955cf299e6783",
+        "block": 1591,
+        "gasUsed": 1394728
+      }
+    ]
+  },
+  "summary": {
+    "compared": 105,
+    "matched": 105,
+    "mismatched": 0,
+    "checks": 68,
+    "checksFailed": 0
+  },
+  "rows": [
+    {
+      "key": "v2.addLiquidity.XY",
+      "compared": true,
+      "match": true,
+      "qrvm": "[\"10000000000000000000\",\"40000000000000000000\",\"19999999999999999000\"]",
+      "evm": "[\"10000000000000000000\",\"40000000000000000000\",\"19999999999999999000\"]"
+    },
+    {
+      "key": "v2.allPairsLength delta",
+      "compared": true,
+      "match": true,
+      "qrvm": "\"1\"",
+      "evm": "\"1\""
+    },
+    {
+      "key": "v2.lp.totalSupply",
+      "compared": true,
+      "match": true,
+      "qrvm": "\"20000000000000000000\"",
+      "evm": "\"20000000000000000000\""
+    },
+    {
+      "key": "v2.lp.balanceOf(me)",
+      "compared": true,
+      "match": true,
+      "qrvm": "\"19999999999999999000\"",
+      "evm": "\"19999999999999999000\""
+    },
+    {
+      "key": "v2.lp.balanceOf(zero) [MINIMUM_LIQUIDITY]",
+      "compared": true,
+      "match": true,
+      "qrvm": "\"1000\"",
+      "evm": "\"1000\""
+    },
+    {
+      "key": "v2.reserves.XY",
+      "compared": true,
+      "match": true,
+      "qrvm": "{\"X\":\"10000000000000000000\",\"Y\":\"40000000000000000000\"}",
+      "evm": "{\"X\":\"10000000000000000000\",\"Y\":\"40000000000000000000\"}"
+    },
+    {
+      "key": "v2.lp.name/symbol/decimals",
+      "compared": true,
+      "match": true,
+      "qrvm": "[\"Acorn V2\",\"ACORN-V2\",\"18\"]",
+      "evm": "[\"Acorn V2\",\"ACORN-V2\",\"18\"]"
+    },
+    {
+      "key": "v2.getAmountsOut(1e18,[X,Y])",
+      "compared": true,
+      "match": true,
+      "qrvm": "[\"1000000000000000000\",\"3626443575520596526\"]",
+      "evm": "[\"1000000000000000000\",\"3626443575520596526\"]"
+    },
+    {
+      "key": "v2.swapExactTokensForTokens(1e18,[X,Y])",
+      "compared": true,
+      "match": true,
+      "qrvm": "[\"1000000000000000000\",\"3626443575520596526\"]",
+      "evm": "[\"1000000000000000000\",\"3626443575520596526\"]"
+    },
+    {
+      "key": "v2.getAmountsIn(1e18,[Y,X])",
+      "compared": true,
+      "match": true,
+      "qrvm": "[\"3648300544080180891\",\"1000000000000000000\"]",
+      "evm": "[\"3648300544080180891\",\"1000000000000000000\"]"
+    },
+    {
+      "key": "v2.swapTokensForExactTokens(1e18,[Y,X])",
+      "compared": true,
+      "match": true,
+      "qrvm": "[\"3648300544080180891\",\"1000000000000000000\"]",
+      "evm": "[\"3648300544080180891\",\"1000000000000000000\"]"
+    },
+    {
+      "key": "v2.reserves.XY after swaps",
+      "compared": true,
+      "match": true,
+      "qrvm": "{\"X\":\"10000000000000000000\",\"Y\":\"40021856968559584365\"}",
+      "evm": "{\"X\":\"10000000000000000000\",\"Y\":\"40021856968559584365\"}"
+    },
+    {
+      "key": "v2.kLast (fee off)",
+      "compared": true,
+      "match": true,
+      "qrvm": "\"0\"",
+      "evm": "\"0\""
+    },
+    {
+      "key": "v2.swapExactTokensForTokens(1e18,[X,Y,Z])",
+      "compared": true,
+      "match": true,
+      "qrvm": "[\"1000000000000000000\",\"3628425152100928036\",\"3373466858948891187\"]",
+      "evm": "[\"1000000000000000000\",\"3628425152100928036\",\"3373466858948891187\"]"
+    },
+    {
+      "key": "v2.addLiquidityQRL(X 10e18, 5 QRL)",
+      "compared": true,
+      "match": true,
+      "qrvm": "[\"10000000000000000000\",\"5000000000000000000\",\"7071067811865474244\"]",
+      "evm": "[\"10000000000000000000\",\"5000000000000000000\",\"7071067811865474244\"]"
+    },
+    {
+      "key": "v2.swapExactQRLForTokens(1 QRL,[WQRL,X])",
+      "compared": true,
+      "match": true,
+      "qrvm": "[\"1000000000000000000\",\"1662497915624478906\"]",
+      "evm": "[\"1000000000000000000\",\"1662497915624478906\"]"
+    },
+    {
+      "key": "v2.swapExactTokensForQRL(1e18,[X,WQRL])",
+      "compared": true,
+      "match": true,
+      "qrvm": "[\"1000000000000000000\",\"640848322270228113\"]",
+      "evm": "[\"1000000000000000000\",\"640848322270228113\"]"
+    },
+    {
+      "key": "v2.router native balance after QRL swaps",
+      "compared": true,
+      "match": true,
+      "qrvm": "\"0\"",
+      "evm": "\"0\""
+    },
+    {
+      "key": "v2.lp allowance(me, router) after approve(max)",
+      "compared": true,
+      "match": true,
+      "qrvm": "\"115792089237316195423570985008687907853269984665640564039457584007913129639935\"",
+      "evm": "\"115792089237316195423570985008687907853269984665640564039457584007913129639935\""
+    },
+    {
+      "key": "v2.removeLiquidityQRL(half)",
+      "compared": true,
+      "match": true,
+      "qrvm": "[\"4668751042187759886\",\"2679575838864885564\"]",
+      "evm": "[\"4668751042187759886\",\"2679575838864885564\"]"
+    },
+    {
+      "key": "v2.reserves.X/WQRL",
+      "compared": true,
+      "match": true,
+      "qrvm": "{\"X\":\"4668751042187761208\",\"WQRL\":\"2679575838864886323\"}",
+      "evm": "{\"X\":\"4668751042187761208\",\"WQRL\":\"2679575838864886323\"}"
+    },
+    {
+      "key": "v2.reserves.D/WQRL",
+      "compared": true,
+      "match": true,
+      "qrvm": "{\"D\":\"9900000000000000000\",\"WQRL\":\"5000000000000000000\"}",
+      "evm": "{\"D\":\"9900000000000000000\",\"WQRL\":\"5000000000000000000\"}"
+    },
+    {
+      "key": "v2.FoT swap D->WQRL received",
+      "compared": true,
+      "match": true,
+      "qrvm": "\"453305446940074565\"",
+      "evm": "\"453305446940074565\""
+    },
+    {
+      "key": "v2.FoT swap QRL->D received",
+      "compared": true,
+      "match": true,
+      "qrvm": "\"231335427442796661\"",
+      "evm": "\"231335427442796661\""
+    },
+    {
+      "key": "v2.FoT removeLiquidityQRL D received",
+      "compared": true,
+      "match": true,
+      "qrvm": "\"5222133463415814910\"",
+      "evm": "\"5222133463415814910\""
+    },
+    {
+      "key": "v2.flash short repay reverts with",
+      "compared": true,
+      "match": true,
+      "qrvm": "\"AcornV2: K\"",
+      "evm": "\"AcornV2: K\""
+    },
+    {
+      "key": "v2.flash swap: Y paid by payer",
+      "compared": true,
+      "match": true,
+      "qrvm": "\"3650294063837377767\"",
+      "evm": "\"3650294063837377767\""
+    },
+    {
+      "key": "v2.flash swap: X held by borrower",
+      "compared": true,
+      "match": true,
+      "qrvm": "\"1000000000000000000\"",
+      "evm": "\"1000000000000000000\""
+    },
+    {
+      "key": "v2.reentrancy into swap reverts with",
+      "compared": true,
+      "match": true,
+      "qrvm": "\"AcornV2: LOCKED\"",
+      "evm": "\"AcornV2: LOCKED\""
+    },
+    {
+      "key": "v2.protocol fee LP minted to feeTo",
+      "compared": true,
+      "match": true,
+      "qrvm": "\"0\"",
+      "evm": "\"0\""
+    },
+    {
+      "key": "v2.kLast (fee on)",
+      "compared": true,
+      "match": true,
+      "qrvm": "\"456064679139396495536000000000000000000\"",
+      "evm": "\"456064679139396495536000000000000000000\""
+    },
+    {
+      "key": "v2.revert: expired deadline",
+      "compared": true,
+      "match": true,
+      "qrvm": "\"AcornV2Router: EXPIRED\"",
+      "evm": "\"AcornV2Router: EXPIRED\""
+    },
+    {
+      "key": "v2.revert: min out",
+      "compared": true,
+      "match": true,
+      "qrvm": "\"AcornV2Router: INSUFFICIENT_OUTPUT_AMOUNT\"",
+      "evm": "\"AcornV2Router: INSUFFICIENT_OUTPUT_AMOUNT\""
+    },
+    {
+      "key": "v2.revert: identical tokens",
+      "compared": true,
+      "match": true,
+      "qrvm": "\"AcornV2: IDENTICAL_ADDRESSES\"",
+      "evm": "\"AcornV2: IDENTICAL_ADDRESSES\""
+    },
+    {
+      "key": "v2.revert: pair exists",
+      "compared": true,
+      "match": true,
+      "qrvm": "\"AcornV2: PAIR_EXISTS\"",
+      "evm": "\"AcornV2: PAIR_EXISTS\""
+    },
+    {
+      "key": "v2.revert: missing pair path",
+      "compared": false,
+      "match": null,
+      "qrvm": "\"<no reason>\"",
+      "evm": "\"<no reason>\""
+    },
+    {
+      "key": "v2.removeLiquidity(all XY LP)",
+      "compared": true,
+      "match": true,
+      "qrvm": "[\"15999999999999999249\",\"28504042446212279634\"]",
+      "evm": "[\"15999999999999999249\",\"28504042446212279634\"]"
+    },
+    {
+      "key": "v2.reserves.XY after exit",
+      "compared": true,
+      "match": true,
+      "qrvm": "{\"X\":\"751\",\"Y\":\"1337\"}",
+      "evm": "{\"X\":\"751\",\"Y\":\"1337\"}"
+    },
+    {
+      "key": "v2.blockTimestampLast",
+      "compared": false,
+      "match": null,
+      "qrvm": "\"1793093057\"",
+      "evm": "\"1793092309\""
+    },
+    {
+      "key": "v2.price0CumulativeLast",
+      "compared": false,
+      "match": null,
+      "qrvm": "\"5401455582976901953455672431855808288\"",
+      "evm": "\"381406570693444959111687341154216964\""
+    },
+    {
+      "key": "v3.feeAmountTickSpacing(500,3000,10000)",
+      "compared": true,
+      "match": true,
+      "qrvm": "[\"10\",\"60\",\"200\"]",
+      "evm": "[\"10\",\"60\",\"200\"]"
+    },
+    {
+      "key": "v3.factory owner is deployer",
+      "compared": true,
+      "match": true,
+      "qrvm": "true",
+      "evm": "true"
+    },
+    {
+      "key": "v3.pool immutables (fee, tickSpacing, maxLiquidityPerTick)",
+      "compared": true,
+      "match": true,
+      "qrvm": "[\"3000\",\"60\",\"11505743598341114571880798222544994\"]",
+      "evm": "[\"3000\",\"60\",\"11505743598341114571880798222544994\"]"
+    },
+    {
+      "key": "v3.slot0 after initialize",
+      "compared": true,
+      "match": true,
+      "qrvm": "[\"80016521857016597127997947904\",\"198\",\"0\",\"1\",\"1\",\"0\",true]",
+      "evm": "[\"80016521857016597127997947904\",\"198\",\"0\",\"1\",\"1\",\"0\",true]"
+    },
+    {
+      "key": "v3.revert: initialize twice",
+      "compared": true,
+      "match": true,
+      "qrvm": "\"AI\"",
+      "evm": "\"AI\""
+    },
+    {
+      "key": "v3.mint(-600,600,1e21)",
+      "compared": true,
+      "match": true,
+      "qrvm": "[\"19700553855811444948\",\"39503504715344999582\"]",
+      "evm": "[\"19700553855811444948\",\"39503504715344999582\"]"
+    },
+    {
+      "key": "v3.mint(full range,1e20)",
+      "compared": true,
+      "match": true,
+      "qrvm": "[\"99014754297667427522\",\"100995049383620782985\"]",
+      "evm": "[\"99014754297667427522\",\"100995049383620782985\"]"
+    },
+    {
+      "key": "v3.liquidity",
+      "compared": true,
+      "match": true,
+      "qrvm": "\"1100000000000000000000\"",
+      "evm": "\"1100000000000000000000\""
+    },
+    {
+      "key": "v3.ticks(-600)",
+      "compared": true,
+      "match": true,
+      "qrvm": "[\"1000000000000000000000\",\"1000000000000000000000\",\"0\",\"0\",true]",
+      "evm": "[\"1000000000000000000000\",\"1000000000000000000000\",\"0\",\"0\",true]"
+    },
+    {
+      "key": "v3.ticks(600).liquidityNet",
+      "compared": true,
+      "match": true,
+      "qrvm": "\"-1000000000000000000000\"",
+      "evm": "\"-1000000000000000000000\""
+    },
+    {
+      "key": "v3.tickBitmap(-1), tickBitmap(0)",
+      "compared": true,
+      "match": true,
+      "qrvm": "[\"113078212145816597093331040047546785012958969400039613319782796882727665664\",\"1024\"]",
+      "evm": "[\"113078212145816597093331040047546785012958969400039613319782796882727665664\",\"1024\"]"
+    },
+    {
+      "key": "v3.positions(me,-600,600)",
+      "compared": true,
+      "match": true,
+      "qrvm": "[\"1000000000000000000000\",\"0\",\"0\",\"0\",\"0\"]",
+      "evm": "[\"1000000000000000000000\",\"0\",\"0\",\"0\",\"0\"]"
+    },
+    {
+      "key": "v3.revert: mint tickLower >= tickUpper",
+      "compared": true,
+      "match": true,
+      "qrvm": "\"TLU\"",
+      "evm": "\"TLU\""
+    },
+    {
+      "key": "v3.quoteExactInputSingle(X->Y,1e19)",
+      "compared": true,
+      "match": true,
+      "qrvm": "\"10077155491989975865\"",
+      "evm": "\"10077155491989975865\""
+    },
+    {
+      "key": "v3.exactInputSingle(X->Y,1e19)",
+      "compared": true,
+      "match": true,
+      "qrvm": "\"10077155491989975865\"",
+      "evm": "\"10077155491989975865\""
+    },
+    {
+      "key": "v3.slot0 after X->Y",
+      "compared": true,
+      "match": true,
+      "qrvm": "[\"79290708663379421487881228847\",\"15\",\"0\",\"1\",\"1\",\"0\",true]",
+      "evm": "[\"79290708663379421487881228847\",\"15\",\"0\",\"1\",\"1\",\"0\",true]"
+    },
+    {
+      "key": "v3.exactOutputSingle(Y->X,out 5e18) amountIn",
+      "compared": true,
+      "match": true,
+      "qrvm": "\"5045920558556254464\"",
+      "evm": "\"5045920558556254464\""
+    },
+    {
+      "key": "v3.path length (X,Y,Z)",
+      "compared": false,
+      "match": null,
+      "qrvm": "\"198\"",
+      "evm": "\"66\""
+    },
+    {
+      "key": "v3.exactInput(X->Y->Z,1e18)",
+      "compared": true,
+      "match": true,
+      "qrvm": "\"1002777849138144443\"",
+      "evm": "\"1002777849138144443\""
+    },
+    {
+      "key": "v3.exactOutput(out 1e18 X via Y from Z) amountIn",
+      "compared": true,
+      "match": true,
+      "qrvm": "\"1001053090081663295\"",
+      "evm": "\"1001053090081663295\""
+    },
+    {
+      "key": "v3.exactInputSingle(QRL->X,1 QRL) received",
+      "compared": false,
+      "match": null,
+      "qrvm": "\"949659475163118540\"",
+      "evm": "\"949659475163118540\""
+    },
+    {
+      "key": "v3.router native balance after QRL in",
+      "compared": true,
+      "match": true,
+      "qrvm": "\"0\"",
+      "evm": "\"0\""
+    },
+    {
+      "key": "v3.router WQRL balance after unwrap",
+      "compared": true,
+      "match": true,
+      "qrvm": "\"0\"",
+      "evm": "\"0\""
+    },
+    {
+      "key": "v3.revert: multicall bubbles reason",
+      "compared": true,
+      "match": true,
+      "qrvm": "\"Insufficient WQRL9\"",
+      "evm": "\"Insufficient WQRL9\""
+    },
+    {
+      "key": "v3.feeGrowthGlobal0X128 delta from flash",
+      "compared": true,
+      "match": true,
+      "qrvm": "\"928042818875286718536476202086640\"",
+      "evm": "\"928042818875286718536476202086640\""
+    },
+    {
+      "key": "v3.revert: flash without liquidity",
+      "compared": true,
+      "match": true,
+      "qrvm": "\"TF\"",
+      "evm": "\"TF\""
+    },
+    {
+      "key": "v3.protocolFees after swap",
+      "compared": true,
+      "match": true,
+      "qrvm": "[\"0\",\"7500000000000000\"]",
+      "evm": "[\"0\",\"7500000000000000\"]"
+    },
+    {
+      "key": "v3.collectProtocol",
+      "compared": true,
+      "match": true,
+      "qrvm": "[\"0\",\"7499999999999999\"]",
+      "evm": "[\"0\",\"7499999999999999\"]"
+    },
+    {
+      "key": "v3.burn(-600,600,5e20)",
+      "compared": true,
+      "match": true,
+      "qrvm": "[\"8556522410793003866\",\"21074839530656415779\"]",
+      "evm": "[\"8556522410793003866\",\"21074839530656415779\"]"
+    },
+    {
+      "key": "v3.positions after burn",
+      "compared": true,
+      "match": true,
+      "qrvm": "[\"500000000000000000000\",\"12065533958066643786730033035908064\",\"13499237118298531666169955182667095\",\"8591979828311408402\",\"21114510223088841928\"]",
+      "evm": "[\"500000000000000000000\",\"12065533958066643786730033035908064\",\"13499237118298531666169955182667095\",\"8591979828311408402\",\"21114510223088841928\"]"
+    },
+    {
+      "key": "v3.collect(all)",
+      "compared": true,
+      "match": true,
+      "qrvm": "[\"8591979828311408402\",\"21114510223088841928\"]",
+      "evm": "[\"8591979828311408402\",\"21114510223088841928\"]"
+    },
+    {
+      "key": "v3.revert: swap amount 0",
+      "compared": true,
+      "match": true,
+      "qrvm": "\"AS\"",
+      "evm": "\"AS\""
+    },
+    {
+      "key": "v3.revert: swap price limit",
+      "compared": true,
+      "match": true,
+      "qrvm": "\"SPL\"",
+      "evm": "\"SPL\""
+    },
+    {
+      "key": "v3.revert: setFeeProtocol out of range",
+      "compared": true,
+      "match": true,
+      "qrvm": "\"<no reason>\"",
+      "evm": "\"<no reason>\""
+    },
+    {
+      "key": "v3.slot0.observationCardinalityNext",
+      "compared": true,
+      "match": true,
+      "qrvm": "\"10\"",
+      "evm": "\"10\""
+    },
+    {
+      "key": "v3.revert: observe older than history",
+      "compared": true,
+      "match": true,
+      "qrvm": "\"OLD\"",
+      "evm": "\"OLD\""
+    },
+    {
+      "key": "v3.snapshotCumulativesInside(-600,600)",
+      "compared": false,
+      "match": null,
+      "qrvm": "[\"30636\",\"84513766038909443832\",\"252\"]",
+      "evm": "[\"2483\",\"6733466230284024744\",\"20\"]"
+    },
+    {
+      "key": "v3.revert: snapshot of uninitialized ticks",
+      "compared": true,
+      "match": true,
+      "qrvm": "\"<no reason>\"",
+      "evm": "\"<no reason>\""
+    },
+    {
+      "key": "v3.noDelegateCall blocks delegated swap",
+      "compared": true,
+      "match": true,
+      "qrvm": "true",
+      "evm": "true"
+    },
+    {
+      "key": "npm.name/symbol",
+      "compared": true,
+      "match": true,
+      "qrvm": "[\"Acorn V3 Positions NFT-V1\",\"ACORN-V3-POS\"]",
+      "evm": "[\"Acorn V3 Positions NFT-V1\",\"ACORN-V3-POS\"]"
+    },
+    {
+      "key": "npm.revert: createAndInitialize with unsorted tokens",
+      "compared": true,
+      "match": true,
+      "qrvm": "\"<no reason>\"",
+      "evm": "\"<no reason>\""
+    },
+    {
+      "key": "npm.pool slot0 after create (second call is a no-op)",
+      "compared": true,
+      "match": true,
+      "qrvm": "[\"80016521857016597127997947904\",\"198\"]",
+      "evm": "[\"80016521857016597127997947904\",\"198\"]"
+    },
+    {
+      "key": "npm.mint(-1000,1000,5e18 each) liquidity,amount0,amount1",
+      "compared": true,
+      "match": true,
+      "qrvm": "[\"85151761377825512730\",\"3313743853832194123\",\"5000000000000000000\"]",
+      "evm": "[\"85151761377825512730\",\"3313743853832194123\",\"5000000000000000000\"]"
+    },
+    {
+      "key": "npm.tokenId",
+      "compared": false,
+      "match": null,
+      "qrvm": "\"5\"",
+      "evm": "\"1\""
+    },
+    {
+      "key": "npm.totalSupply delta after mint",
+      "compared": true,
+      "match": true,
+      "qrvm": "\"1\"",
+      "evm": "\"1\""
+    },
+    {
+      "key": "npm.positions(tokenId) after mint",
+      "compared": true,
+      "match": true,
+      "qrvm": "{\"nonce\":\"0\",\"operator\":\"zero\",\"tokens\":[\"X\",\"Z\"],\"rest\":[\"500\",\"-1000\",\"1000\",\"85151761377825512730\",\"0\",\"0\",\"0\",\"0\"]}",
+      "evm": "{\"nonce\":\"0\",\"operator\":\"zero\",\"tokens\":[\"X\",\"Z\"],\"rest\":[\"500\",\"-1000\",\"1000\",\"85151761377825512730\",\"0\",\"0\",\"0\",\"0\"]}"
+    },
+    {
+      "key": "npm.increaseLiquidity(1e18 each)",
+      "compared": true,
+      "match": true,
+      "qrvm": "[\"14212202864698407296\",\"392694038432249510\",\"1000000000000000000\"]",
+      "evm": "[\"14212202864698407296\",\"392694038432249510\",\"1000000000000000000\"]"
+    },
+    {
+      "key": "npm.positions after increase (fees folded into owed)",
+      "compared": true,
+      "match": true,
+      "qrvm": "{\"nonce\":\"0\",\"operator\":\"zero\",\"tokens\":[\"X\",\"Z\"],\"rest\":[\"500\",\"-1000\",\"1000\",\"99363964242523920026\",\"1998093529804257593109532309757860\",\"3996187059608519182406124228030907\",\"499999999999999\",\"1000000000000000\"]}",
+      "evm": "{\"nonce\":\"0\",\"operator\":\"zero\",\"tokens\":[\"X\",\"Z\"],\"rest\":[\"500\",\"-1000\",\"1000\",\"99363964242523920026\",\"1998093529804257593109532309757860\",\"3996187059608519182406124228030907\",\"499999999999999\",\"1000000000000000\"]}"
+    },
+    {
+      "key": "npm.collect(fees only)",
+      "compared": true,
+      "match": true,
+      "qrvm": "[\"499999999999999\",\"1000000000000000\"]",
+      "evm": "[\"499999999999999\",\"1000000000000000\"]"
+    },
+    {
+      "key": "npm.decreaseLiquidity(half)",
+      "compared": true,
+      "match": true,
+      "qrvm": "[\"1372751176031794482\",\"3495727058939377571\"]",
+      "evm": "[\"1372751176031794482\",\"3495727058939377571\"]"
+    },
+    {
+      "key": "npm.positions after decrease",
+      "compared": true,
+      "match": true,
+      "qrvm": "{\"nonce\":\"0\",\"operator\":\"zero\",\"tokens\":[\"X\",\"Z\"],\"rest\":[\"500\",\"-1000\",\"1000\",\"49681982121261960013\",\"1998093529804257593109532309757860\",\"3996187059608519182406124228030907\",\"1372751176031794482\",\"3495727058939377571\"]}",
+      "evm": "{\"nonce\":\"0\",\"operator\":\"zero\",\"tokens\":[\"X\",\"Z\"],\"rest\":[\"500\",\"-1000\",\"1000\",\"49681982121261960013\",\"1998093529804257593109532309757860\",\"3996187059608519182406124228030907\",\"1372751176031794482\",\"3495727058939377571\"]}"
+    },
+    {
+      "key": "npm.revert: slippage on decrease",
+      "compared": true,
+      "match": true,
+      "qrvm": "\"Price slippage check\"",
+      "evm": "\"Price slippage check\""
+    },
+    {
+      "key": "npm.revert: burn before clearing",
+      "compared": true,
+      "match": true,
+      "qrvm": "\"Not cleared\"",
+      "evm": "\"Not cleared\""
+    },
+    {
+      "key": "ticklens.getPopulatedTicksInWord(-1), (0)",
+      "compared": true,
+      "match": true,
+      "qrvm": "[[[\"-1000\",\"49681982121261960013\",\"49681982121261960013\"]],[[\"1000\",\"-49681982121261960013\",\"49681982121261960013\"]]]",
+      "evm": "[[[\"-1000\",\"49681982121261960013\",\"49681982121261960013\"]],[[\"1000\",\"-49681982121261960013\",\"49681982121261960013\"]]]"
+    },
+    {
+      "key": "npm.tokenURI name",
+      "compared": true,
+      "match": true,
+      "qrvm": "\"Acorn - 0.05% - ACORN-V2/ACORN-V2 - -1000<>1000\"",
+      "evm": "\"Acorn - 0.05% - ACORN-V2/ACORN-V2 - -1000<>1000\""
+    },
+    {
+      "key": "npm.revert: tokenURI of a missing token",
+      "compared": true,
+      "match": true,
+      "qrvm": "\"<no reason>\"",
+      "evm": "\"<no reason>\""
+    },
+    {
+      "key": "npm.revert: safeTransferFrom to a rejecting receiver",
+      "compared": false,
+      "match": null,
+      "qrvm": "\"<error 0x00000000>\"",
+      "evm": "\"Receiver rejects\""
+    },
+    {
+      "key": "npm.revert: decrease by a non owner",
+      "compared": true,
+      "match": true,
+      "qrvm": "\"Not approved\"",
+      "evm": "\"Not approved\""
+    },
+    {
+      "key": "npm.revert: multicall bubbles Not approved",
+      "compared": true,
+      "match": true,
+      "qrvm": "\"Not approved\"",
+      "evm": "\"Not approved\""
+    },
+    {
+      "key": "npm.revert: transferFrom by a non owner (custom error)",
+      "compared": true,
+      "match": true,
+      "qrvm": "\"<error 0x1b07f91e>\"",
+      "evm": "\"<error 0x1b07f91e>\""
+    },
+    {
+      "key": "npm.revert: custom error inside multicall",
+      "compared": true,
+      "match": true,
+      "qrvm": "\"<no reason>\"",
+      "evm": "\"<no reason>\""
+    },
+    {
+      "key": "npm.revert: forged mint callback",
+      "compared": true,
+      "match": true,
+      "qrvm": "\"<no reason>\"",
+      "evm": "\"<no reason>\""
+    },
+    {
+      "key": "npm.collect(after full decrease)",
+      "compared": true,
+      "match": true,
+      "qrvm": "[\"2745502352063588964\",\"6991454117878755142\"]",
+      "evm": "[\"2745502352063588964\",\"6991454117878755142\"]"
+    },
+    {
+      "key": "npm.revert: positions of a burned token",
+      "compared": true,
+      "match": true,
+      "qrvm": "\"Invalid token ID\"",
+      "evm": "\"Invalid token ID\""
+    },
+    {
+      "key": "npm.totalSupply delta at end",
+      "compared": true,
+      "match": true,
+      "qrvm": "\"1\"",
+      "evm": "\"1\""
+    },
+    {
+      "key": "npm.pool liquidity at end",
+      "compared": true,
+      "match": true,
+      "qrvm": "\"0\"",
+      "evm": "\"0\""
+    },
+    {
+      "key": "npm.multicall(QRL mint) WQRL added to pool",
+      "compared": false,
+      "match": null,
+      "qrvm": "\"425932684801937868\"",
+      "evm": "\"425932684801937867\""
+    },
+    {
+      "key": "npm.native balance after refund",
+      "compared": true,
+      "match": true,
+      "qrvm": "\"0\"",
+      "evm": "\"0\""
+    },
+    {
+      "key": "migrator: V2 LP left",
+      "compared": true,
+      "match": true,
+      "qrvm": "\"0\"",
+      "evm": "\"0\""
+    },
+    {
+      "key": "migrator: Y, Z refunded",
+      "compared": true,
+      "match": true,
+      "qrvm": "[\"28652762801838027576\",\"23313266570525553940\"]",
+      "evm": "[\"28652762801838027576\",\"23313266570525553940\"]"
+    },
+    {
+      "key": "migrator: NFTs minted",
+      "compared": true,
+      "match": true,
+      "qrvm": "\"1\"",
+      "evm": "\"1\""
+    },
+    {
+      "key": "migrator: position liquidity",
+      "compared": true,
+      "match": true,
+      "qrvm": "\"414606494435229298571\"",
+      "evm": "\"414606494435229298571\""
+    },
+    {
+      "key": "migrator: allowances to the NPM after",
+      "compared": true,
+      "match": true,
+      "qrvm": "[\"0\",\"0\"]",
+      "evm": "[\"0\",\"0\"]"
+    },
+    {
+      "key": "migrator.revert: percentage 0",
+      "compared": true,
+      "match": true,
+      "qrvm": "\"Percentage too small\"",
+      "evm": "\"Percentage too small\""
+    }
+  ],
+  "checks": [
+    {
+      "chain": "evm",
+      "name": "router.factory() is the V2 factory",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "chain": "evm",
+      "name": "router.WQRL() is WQRL",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "chain": "evm",
+      "name": "getPair is symmetric and non zero",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "chain": "evm",
+      "name": "pair address equals the off chain CREATE2 formula",
+      "ok": true,
+      "detail": "0xF56c002d5DE8eA3C26aa76058e3A85478155B2eE"
+    },
+    {
+      "chain": "evm",
+      "name": "pairCodeHash equals the local pair artifact",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "chain": "evm",
+      "name": "price0CumulativeLast advanced",
+      "ok": true,
+      "detail": "381406570693444959111687341154216964"
+    },
+    {
+      "chain": "evm",
+      "name": "getPool is symmetric",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "chain": "evm",
+      "name": "pool address equals the off chain CREATE2 formula",
+      "ok": true,
+      "detail": "0x692b54CAEFD89AF5c0119D489Da1bCd0A536af88"
+    },
+    {
+      "chain": "evm",
+      "name": "pool token0/token1 are X/Y",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "chain": "evm",
+      "name": "quoter matches exactInputSingle",
+      "ok": true,
+      "detail": "10077155491989975865 vs 10077155491989975865"
+    },
+    {
+      "chain": "evm",
+      "name": "quoter matches exactOutputSingle",
+      "ok": true,
+      "detail": "5045920558556254464 vs 5045920558556254464"
+    },
+    {
+      "chain": "evm",
+      "name": "quoter matches exactInput (2 hops)",
+      "ok": true,
+      "detail": "1002777849138144443 vs 1002777849138144443"
+    },
+    {
+      "chain": "evm",
+      "name": "quoter matches exactOutput (2 hops)",
+      "ok": true,
+      "detail": "1001053090081663295 vs 1001053090081663295"
+    },
+    {
+      "chain": "evm",
+      "name": "multicall swap + unwrapWQRL9 paid native QRL out",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "chain": "evm",
+      "name": "observe([0]) answers",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "chain": "evm",
+      "name": "snapshotCumulativesInside answers",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "chain": "evm",
+      "name": "npm.factory() and npm.WQRL9() are wired",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "chain": "evm",
+      "name": "npm.ownerOf(tokenId) is the minter",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "chain": "evm",
+      "name": "npm.tokenOfOwnerByIndex(last) is the new token",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "chain": "evm",
+      "name": "core position held by the NPM has the NFT liquidity",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "chain": "evm",
+      "name": "npm.tokenURI description carries the pool address",
+      "ok": true,
+      "detail": "This NFT represents a liquidity position in an Acorn V3 ACORN-V2/ACORN-V2 pool. The owner of this NFT can modify or redeem the position.\n\nPool Address: Qafdd9a1"
+    },
+    {
+      "chain": "evm",
+      "name": "npm.positions().operator reads the SQRC-TN1 approval",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "chain": "evm",
+      "name": "rejected safe transfer leaves the owner unchanged",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "chain": "evm",
+      "name": "safe transfer to an accepting receiver moves the token",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "chain": "evm",
+      "name": "transfer clears the single token approval",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "chain": "evm",
+      "name": "npm.multicall(QRL mint) wrapped native QRL into the pool",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "chain": "qrvm",
+      "name": "runtime code of WQRL matches build/qrvm",
+      "ok": true,
+      "detail": "2654 bytes"
+    },
+    {
+      "chain": "qrvm",
+      "name": "runtime code of AcornV2Factory matches build/qrvm",
+      "ok": true,
+      "detail": "17851 bytes"
+    },
+    {
+      "chain": "qrvm",
+      "name": "runtime code of AcornV2Router02 matches build/qrvm",
+      "ok": true,
+      "detail": "17572 bytes"
+    },
+    {
+      "chain": "qrvm",
+      "name": "Oracle call protection slot holds its own address",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "chain": "qrvm",
+      "name": "runtime code of Oracle matches build/qrvm",
+      "ok": true,
+      "detail": "4105 bytes"
+    },
+    {
+      "chain": "qrvm",
+      "name": "runtime code of AcornV3Factory matches build/qrvm",
+      "ok": true,
+      "detail": "2353 bytes"
+    },
+    {
+      "chain": "qrvm",
+      "name": "runtime code of SwapRouter matches build/qrvm",
+      "ok": true,
+      "detail": "8860 bytes"
+    },
+    {
+      "chain": "qrvm",
+      "name": "runtime code of Quoter matches build/qrvm",
+      "ok": true,
+      "detail": "4410 bytes"
+    },
+    {
+      "chain": "qrvm",
+      "name": "runtime code of AcornV3PoolLens matches build/qrvm",
+      "ok": true,
+      "detail": "2189 bytes"
+    },
+    {
+      "chain": "qrvm",
+      "name": "runtime code of AcornV3PositionDescriptor matches build/qrvm",
+      "ok": true,
+      "detail": "6897 bytes"
+    },
+    {
+      "chain": "qrvm",
+      "name": "runtime code of NonfungiblePositionManager matches build/qrvm",
+      "ok": true,
+      "detail": "19412 bytes"
+    },
+    {
+      "chain": "qrvm",
+      "name": "runtime code of TickLens matches build/qrvm",
+      "ok": true,
+      "detail": "1588 bytes"
+    },
+    {
+      "chain": "qrvm",
+      "name": "runtime code of V3Migrator matches build/qrvm",
+      "ok": true,
+      "detail": "6231 bytes"
+    },
+    {
+      "chain": "qrvm",
+      "name": "factory.poolCodeHash equals the linked pool init code",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "chain": "qrvm",
+      "name": "calling a pool code chunk is a no-op",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "chain": "qrvm",
+      "name": "Oracle library rejects a direct call",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "chain": "qrvm",
+      "name": "router.factory() is the V2 factory",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "chain": "qrvm",
+      "name": "router.WQRL() is WQRL",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "chain": "qrvm",
+      "name": "getPair is symmetric and non zero",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "chain": "qrvm",
+      "name": "pair address equals the off chain CREATE2 formula",
+      "ok": true,
+      "detail": "Qd000df0cf680f2d95d5df6a264540be95d066d469ed02f13b9087dd520674cb01846f155d3fe39ebfa596db47b6bcb5344eb14aeded35972289acc85aae6d505"
+    },
+    {
+      "chain": "qrvm",
+      "name": "pairCodeHash equals the local pair artifact",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "chain": "qrvm",
+      "name": "price0CumulativeLast advanced",
+      "ok": true,
+      "detail": "5401455582976901953455672431855808288"
+    },
+    {
+      "chain": "qrvm",
+      "name": "getPool is symmetric",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "chain": "qrvm",
+      "name": "pool address equals the off chain CREATE2 formula",
+      "ok": true,
+      "detail": "Q1b66b83004eefeb4a5dcad81f73e67a9412c87358511f50c0db3f4c44b7b060d19edfcd2e4eafb4c3c720b63fb70253858a73bd285e5a1c7972d4cbe86c07270"
+    },
+    {
+      "chain": "qrvm",
+      "name": "pool token0/token1 are X/Y",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "chain": "qrvm",
+      "name": "quoter matches exactInputSingle",
+      "ok": true,
+      "detail": "10077155491989975865 vs 10077155491989975865"
+    },
+    {
+      "chain": "qrvm",
+      "name": "quoter matches exactOutputSingle",
+      "ok": true,
+      "detail": "5045920558556254464 vs 5045920558556254464"
+    },
+    {
+      "chain": "qrvm",
+      "name": "quoter matches exactInput (2 hops)",
+      "ok": true,
+      "detail": "1002777849138144443 vs 1002777849138144443"
+    },
+    {
+      "chain": "qrvm",
+      "name": "quoter matches exactOutput (2 hops)",
+      "ok": true,
+      "detail": "1001053090081663295 vs 1001053090081663295"
+    },
+    {
+      "chain": "qrvm",
+      "name": "multicall swap + unwrapWQRL9 paid native QRL out",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "chain": "qrvm",
+      "name": "observe([0]) answers",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "chain": "qrvm",
+      "name": "snapshotCumulativesInside answers",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "chain": "qrvm",
+      "name": "npm.factory() and npm.WQRL9() are wired",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "chain": "qrvm",
+      "name": "npm.ownerOf(tokenId) is the minter",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "chain": "qrvm",
+      "name": "npm.tokenOfOwnerByIndex(last) is the new token",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "chain": "qrvm",
+      "name": "core position held by the NPM has the NFT liquidity",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "chain": "qrvm",
+      "name": "npm.tokenURI description carries the pool address",
+      "ok": true,
+      "detail": "This NFT represents a liquidity position in an Acorn V3 ACORN-V2/ACORN-V2 pool. The owner of this NFT can modify or redeem the position.\n\nPool Address: Q9057c4c"
+    },
+    {
+      "chain": "qrvm",
+      "name": "npm.positions().operator reads the SQRC-TN1 approval",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "chain": "qrvm",
+      "name": "rejected safe transfer leaves the owner unchanged",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "chain": "qrvm",
+      "name": "safe transfer to an accepting receiver moves the token",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "chain": "qrvm",
+      "name": "transfer clears the single token approval",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "chain": "qrvm",
+      "name": "npm.multicall(QRL mint) wrapped native QRL into the pool",
+      "ok": true,
+      "detail": ""
+    }
+  ],
+  "gas": {
+    "v2.addLiquidity(new pair)": {
+      "qrvm": "3537102",
+      "evm": "2423535"
+    },
+    "v2.swapExactTokensForTokens": {
+      "qrvm": "132323",
+      "evm": "134586"
+    },
+    "v2.swap 2 hops": {
+      "qrvm": "195082",
+      "evm": "191028"
+    },
+    "v2.addLiquidityQRL": {
+      "qrvm": "3536166",
+      "evm": "2409016"
+    },
+    "v2.flash swap": {
+      "qrvm": "117154",
+      "evm": "113692"
+    },
+    "v2.removeLiquidity": {
+      "qrvm": "125312",
+      "evm": "117254"
+    },
+    "v3.createPool": {
+      "qrvm": "4890581",
+      "evm": "4518968"
+    },
+    "v3.initialize": {
+      "qrvm": "75410",
+      "evm": "70180"
+    },
+    "v3.mint (new ticks)": {
+      "qrvm": "341102",
+      "evm": "329436"
+    },
+    "v3.exactInputSingle": {
+      "qrvm": "161016",
+      "evm": "126903"
+    },
+    "v3.exactInput 2 hops": {
+      "qrvm": "276052",
+      "evm": "212297"
+    },
+    "v3.multicall swap+unwrap": {
+      "qrvm": "176412",
+      "evm": "155612"
+    },
+    "v3.flash": {
+      "qrvm": "146991",
+      "evm": "128800"
+    },
+    "v3.burn": {
+      "qrvm": "104095",
+      "evm": "145290"
+    },
+    "v3.collect": {
+      "qrvm": "79582",
+      "evm": "64094"
+    },
+    "v3.grow observations (linked Oracle)": {
+      "qrvm": "233169",
+      "evm": "229137"
+    },
+    "npm.createAndInitializePoolIfNecessary": {
+      "qrvm": "4950084",
+      "evm": "4573793"
+    },
+    "npm.mint (new position)": {
+      "qrvm": "618508",
+      "evm": "566521"
+    },
+    "npm.increaseLiquidity": {
+      "qrvm": "232729",
+      "evm": "284960"
+    },
+    "npm.collect": {
+      "qrvm": "135569",
+      "evm": "114991"
+    },
+    "npm.decreaseLiquidity": {
+      "qrvm": "125037",
+      "evm": "154381"
+    },
+    "npm.safeTransferFrom to contract": {
+      "qrvm": "89925",
+      "evm": "88522"
+    },
+    "npm.burn": {
+      "qrvm": "64268",
+      "evm": "68520"
+    },
+    "npm.multicall mint with QRL + refund": {
+      "qrvm": "530448",
+      "evm": "538595"
+    },
+    "v3migrator.migrate": {
+      "qrvm": "578934",
+      "evm": "544978"
+    }
+  }
+}

@@ -1,0 +1,14 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+pragma hyperion >=0.0;
+
+/// @title An interface for a contract that is capable of deploying Pauli V3 pools
+/// @notice Keeps the pool's constructor free of arguments so that its init code
+/// hash stays constant, which is what makes off chain CREATE2 address derivation
+/// possible.
+interface IPauliV3PoolDeployer {
+    /// @notice Parameters transiently set during pool creation
+    function parameters()
+        external
+        view
+        returns (address factory, address token0, address token1, uint24 fee, int24 tickSpacing);
+}

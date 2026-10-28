@@ -1,0 +1,15 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+pragma hyperion >=0.0;
+
+import {PoolAddress} from "../v3/periphery/libraries/PoolAddress.hyp";
+
+/// @notice Exposes the internal library to the QRVM differential tests.
+contract PoolAddressProbe {
+    function computeAddress(address factory, address tokenA, address tokenB, uint24 fee)
+        external
+        view
+        returns (address)
+    {
+        return PoolAddress.computeAddress(factory, PoolAddress.getPoolKey(tokenA, tokenB, fee));
+    }
+}

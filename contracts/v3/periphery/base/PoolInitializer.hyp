@@ -1,0 +1,31 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+pragma hyperion >=0.0;
+
+import {IPauliV3Factory} from "../../core/interfaces/IPauliV3Factory.hyp";
+import {IPauliV3Pool} from "../../core/interfaces/IPauliV3Pool.hyp";
+import {PeripheryImmutableState} from "./PeripheryImmutableState.hyp";
+import {IPoolInitializer} from "../interfaces/IPoolInitializer.hyp";
+
+/// @title Creates and initializes V3 Pools
+abstract contract PoolInitializer is IPoolInitializer, PeripheryImmutableState {
+    /// @inheritdoc IPoolInitializer
+    function createAndInitializePoolIfNecessary(address token0, address token1, uint24 fee, uint160 sqrtPriceX96)
+        external
+        payable
+        override
+        returns (address pool)
+    {
+        require(token0 < token1);
+        pool = IPauliV3Factory(factory).getPool(token0, token1, fee);
+
+        if (pool == address(0)) {
+            pool = IPauliV3Factory(factory).createPool(token0, token1, fee);
+            IPauliV3Pool(pool).initialize(sqrtPriceX96);
+        } else {
+            (uint160 sqrtPriceX96Existing,,,,,,) = IPauliV3Pool(pool).slot0();
+            if (sqrtPriceX96Existing == 0) {
+                IPauliV3Pool(pool).initialize(sqrtPriceX96);
+            }
+        }
+    }
+}

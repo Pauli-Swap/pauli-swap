@@ -24,10 +24,10 @@ function encodePath(tokens, fees) {
 async function fixture() {
   const [wallet, other] = await ethers.getSigners();
 
-  const factory = await deploy('AcornV3Factory', [], wallet);
+  const factory = await deploy('PauliV3Factory', [], wallet);
   const wqrl = await deploy('WQRL', [], wallet);
   const router = await deploy('SwapRouter', [await factory.getAddress(), await wqrl.getAddress()], wallet);
-  const caller = await deploy('AcornV3PoolCaller', [], wallet);
+  const caller = await deploy('PauliV3PoolCaller', [], wallet);
 
   const tokens = [];
   for (let i = 0; i < 3; i++) {
@@ -50,7 +50,7 @@ async function createAndSeedPool(ctx, tokenA, tokenB) {
   const b = await tokenB.getAddress();
   await factory.createPool(a, b, FEE_MEDIUM);
   const poolAddress = await factory.getPool(a, b, FEE_MEDIUM);
-  const pool = await ethers.getContractAt(artifactOf('AcornV3Pool').abi, poolAddress, wallet);
+  const pool = await ethers.getContractAt(artifactOf('PauliV3Pool').abi, poolAddress, wallet);
   await pool.initialize(ENCODED_PRICE_1_1);
   await caller.mint(
     poolAddress,
@@ -75,7 +75,7 @@ describe('V3 periphery', () => {
     expect(await probe.computeAddress(await factory.getAddress(), a, b, FEE_MEDIUM)).to.equal(
       await factory.getPool(a, b, FEE_MEDIUM)
     );
-    expect(await probe.initCodeHash()).to.equal(ethers.keccak256(artifactOf('AcornV3Pool').bytecode));
+    expect(await probe.initCodeHash()).to.equal(ethers.keccak256(artifactOf('PauliV3Pool').bytecode));
   });
 
   it('swaps an exact input through a single pool', async () => {
@@ -242,7 +242,7 @@ describe('V3 periphery', () => {
       ['tuple(bytes,address)'],
       [[encodePath([await tokens[0].getAddress(), await tokens[1].getAddress()], [FEE_MEDIUM]), ethers.ZeroAddress]]
     );
-    await expect(router.acornV3SwapCallback(1, 0, data)).to.be.reverted;
+    await expect(router.pauliV3SwapCallback(1, 0, data)).to.be.reverted;
   });
 
   it('wraps native QRL for a swap and refunds the remainder', async () => {
@@ -253,7 +253,7 @@ describe('V3 periphery', () => {
     const [a, b] = [await wqrl.getAddress(), await token.getAddress()];
     await factory.createPool(a, b, FEE_MEDIUM);
     const poolAddress = await factory.getPool(a, b, FEE_MEDIUM);
-    const pool = await ethers.getContractAt(artifactOf('AcornV3Pool').abi, poolAddress, wallet);
+    const pool = await ethers.getContractAt(artifactOf('PauliV3Pool').abi, poolAddress, wallet);
     await pool.initialize(ENCODED_PRICE_1_1);
 
     await wqrl.deposit({ value: expandTo18Decimals(100) });
