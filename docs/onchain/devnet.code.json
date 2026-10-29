@@ -2,10 +2,10 @@
   "network": "devnet",
   "chainId": 3151908,
   "blocks": [
-    2876,
-    2877
+    3790,
+    3790
   ],
-  "ranAt": "2026-10-29T04:23:05.000Z",
+  "ranAt": "2026-10-29T07:56:56.809Z",
   "deployment": {
     "network": "devnet",
     "chainId": 3151908,
