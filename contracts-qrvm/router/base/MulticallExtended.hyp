@@ -1,0 +1,40 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+pragma hyperion >=0.0;
+
+import {PeripheryValidation} from "../../v3/periphery/base/PeripheryValidation.hyp";
+
+/// @title Multicall
+/// @notice Enables calling multiple methods in a single call to the contract,
+/// with a deadline. SwapRouter02's swap structs carry no deadline, so this is
+/// where it is checked.
+/// @dev Upstream overloads multicall three ways (plain, deadline, previous
+/// blockhash). Only the deadline one is kept: the QRL web3.js client cannot pick between
+/// overloaded names, and a swap without a deadline is not something a front
+/// end should send. The loop is Multicall's, which cannot be reused because
+/// its multicall is external.
+abstract contract MulticallExtended is PeripheryValidation {
+    function multicall(uint256 deadline, bytes[] calldata data)
+        external
+        payable
+        checkDeadline(deadline)
+        returns (bytes[] memory results)
+    {
+        results = new bytes[](data.length);
+        for (uint256 i = 0; i < data.length; i++) {
+            (bool success, bytes memory result) = address(this).delegatecall(data[i]);
+
+            if (!success) {
+                // Forward the inner revert reason rather than the opaque
+                // delegatecall failure. QRVM: with 64 byte ABI words an
+                // Error(string) is at least 4 + 64 + 64 bytes; upstream's bound is 68.
+                if (result.length < 132) revert();
+                assembly {
+                    result := add(result, 0x04)
+                }
+                revert(abi.decode(result, (string)));
+            }
+
+            results[i] = result;
+        }
+    }
+}

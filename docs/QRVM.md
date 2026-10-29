@@ -204,6 +204,34 @@ addresses from `abi.encodePacked`, which gives 40 hex digits on one line and
 Sizes (runtime / init): `NonfungiblePositionManager` 19,412 / 20,159 on QRVM,
 17,668 / 18,493 on the 20 byte build.
 
+### Q8. SwapRouter02 and the interface fee
+
+`contracts/router/` ports Uniswap's swap-router-contracts: `V2SwapRouter`,
+`V3SwapRouter`, `PeripheryPaymentsWithFee` and a deadline `multicall`, under
+`SwapRouter02`. It is what the interface swaps through, for two reasons: one
+router reaches both protocols, so a route can mix V2 and V3 hops; and the
+interface fee is taken in the same transaction, Uniswap style. The interface
+swaps to the router (`ADDRESS_THIS`) and pays the output out with
+`sweepTokenWithFee` / `unwrapWQRL9WithFee`, which keep `feeBips` (at most
+100, 1%) for a fee recipient the caller names. The contract stores no fee and
+no recipient: whoever calls it directly, or through `PauliV2Router02` /
+`SwapRouter`, pays only the pool's LP fee.
+
+Nothing in it is QRVM specific except what its imports already handle:
+`PauliV2Library.pairFor` and `PoolAddress` look the pair and pool up (Q1),
+and `MulticallExtended` has an overlay for the same 132 byte revert bound as
+`Multicall`. The flags `MSG_SENDER = address(1)` and `ADDRESS_THIS =
+address(2)` compile on both lines and are `Q` + 127 zeros + `1` / `2` on QIP-55.
+
+Left out of upstream: `SelfPermit` (no `ecrecover`), `ApproveAndCall`
+(liquidity through the router), `OracleSlippage`, and every overload: the
+plain and previous-blockhash `multicall`, and the payment calls that default
+the recipient to `msg.sender`. The QRL web3.js client cannot choose between
+overloaded names, and the interface always sends a deadline.
+
+Sizes (runtime / init): `SwapRouter02` 14,826 / 15,118 on QRVM, 13,267 /
+13,606 on the 20 byte build, at one optimizer run on QRVM like V3.
+
 ---
 
 ## Verification

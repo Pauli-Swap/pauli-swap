@@ -71,6 +71,9 @@ const OPTIMIZER_RUNS = [
   // On QRVM the pool is over MaxCodeSize at 200 runs and only fits at one, see
   // docs/QRVM.md. No init code hash is pinned on that line, so this is free.
   ['contracts/v3/', QRVM ? 1 : 200],
+  // SwapRouter02 carries both protocols' swap paths; one run keeps it under
+  // MaxCodeSize on QRVM the same way.
+  ['contracts/router/', QRVM ? 1 : 200],
   ['contracts/test/', 200],
 ];
 

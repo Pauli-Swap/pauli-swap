@@ -12,6 +12,56 @@ transaction) and
 [`onchain/devnet.differential.json`](onchain/devnet.differential.json)
 (vectors).
 
+## Rerun on 2026-10-29: the current build and SwapRouter02
+
+**Result: no mismatches and no failed checks.** The run below this section
+audited the build from before the 2026-10-28 rename and devnet reset, whose
+bytecode differs from what is live now (pair and pool code hashes changed). It
+was rerun against the current build, with `SwapRouter02` (QRVM.md Q8) added
+to the scenario:
+
+| Run | Result | Data |
+| --- | --- | --- |
+| Full scenario on a twin deployment of the current build (blocks 2697–2713, scenario 2715–2831) | 121/121 values identical to the 20 byte build, 85/85 checks | [`onchain/devnet-audit.json`](onchain/devnet-audit.json) |
+| Math vectors | 1,128/1,128 | [`onchain/devnet.differential.json`](onchain/devnet.differential.json) |
+| Live deployment: runtime code of every contract, `SwapRouter02` included, against `build/qrvm` (immutables and library links masked) | 17/17 checks | [`onchain/devnet.code.json`](onchain/devnet.code.json) |
+
+Why a twin: the scenario creates its own tokens and about eight V2 and V3
+pools on the factories it audits. On the live factories those would show in
+the interface and the indexer, and decide PauliSwap Predict market #2 ("at
+least 10 pools by Nov 5") by the owner's own hand. The twin is deployed from
+the same artifacts, and the live code check shows the live contracts are those
+artifacts, so the scenario's results carry over. `AUDIT_CODE_ONLY=1` runs that
+check alone.
+
+`SwapRouter02` was added to the live deployment in block 2876
+(`QRVM_ADD=SwapRouter02 npm run deploy:qrvm`), wired to the existing
+factories and WQRL; nothing else was redeployed. Its part of the scenario, all
+matching the 20 byte build:
+
+- V2 exact input and exact output equal `PauliV2Router02.getAmountsOut` /
+  `getAmountsIn`; a fee-on-transfer input is measured, not trusted.
+- V3 `exactInputSingle` and two-hop `exactOutput` equal the `Quoter`.
+- Swap to the router plus `sweepTokenWithFee` at 25 bips pays exactly
+  `gross × 25 / 10000` to the fee recipient and the rest to the wallet; the
+  same with `unwrapWQRL9WithFee` in QRL. The router keeps nothing.
+- A V2 hop into a V3 hop through the router balance (`ADDRESS_THIS`, then
+  `amountIn` 0).
+- An expired deadline reverts with `Transaction too old`; `multicall` forwards
+  `Too little received` (the QRVM overlay's 132 byte bound); a fee of 0 or 101
+  bips and a short sweep revert.
+
+| Operation | QRVM | EVM |
+| --- | ---: | ---: |
+| `SwapRouter02` V2 `swapExactTokensForTokens` | 131,273 | 135,366 |
+| `SwapRouter02` V3 `exactInputSingle` | 150,384 | 116,957 |
+| `SwapRouter02` V3 two-hop `exactOutput` | 246,330 | 187,518 |
+| `multicall` swap + `sweepTokenWithFee` | 201,259 | 156,038 |
+| `multicall` swap + `unwrapWQRL9WithFee` | 204,374 | 166,633 |
+| `multicall` V2 then V3 | 231,566 | 199,940 |
+
+The rest of this document is the first run, kept as it was.
+
 ## Environment
 
 | | |

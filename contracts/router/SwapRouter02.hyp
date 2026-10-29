@@ -1,0 +1,23 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+pragma hyperion >=0.0;
+
+import {PeripheryImmutableState} from "../v3/periphery/base/PeripheryImmutableState.hyp";
+import {ImmutableState} from "./base/ImmutableState.hyp";
+import {MulticallExtended} from "./base/MulticallExtended.hyp";
+import {V2SwapRouter} from "./V2SwapRouter.hyp";
+import {V3SwapRouter} from "./V3SwapRouter.hyp";
+
+/// @title Pauli V2 and V3 Swap Router
+/// @notice One router for both protocols, so a route can mix V2 and V3 hops
+/// and a front end can take its fee from the output in the same transaction.
+/// @dev Port of Uniswap's SwapRouter02 (swap-router-contracts). Left out:
+/// SelfPermit (EIP-2612 needs ecrecover, which Zond does not provide),
+/// ApproveAndCall (liquidity through the router; the interface uses the
+/// position manager directly) and OracleSlippage. See MulticallExtended and
+/// PeripheryPaymentsWithFee for the overloads that are not kept.
+contract SwapRouter02 is V2SwapRouter, V3SwapRouter, MulticallExtended {
+    constructor(address _factoryV2, address factoryV3, address _WQRL9)
+        ImmutableState(_factoryV2)
+        PeripheryImmutableState(factoryV3, _WQRL9)
+    {}
+}

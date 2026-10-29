@@ -1,0 +1,14 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+pragma hyperion >=0.0;
+
+/// @title Immutable state
+/// @notice Immutable state used by the swap router. Upstream also keeps the
+/// position manager here for ApproveAndCall, which this port leaves out.
+abstract contract ImmutableState {
+    /// @return Returns the address of the Pauli V2 factory
+    address public immutable factoryV2;
+
+    constructor(address _factoryV2) {
+        factoryV2 = _factoryV2;
+    }
+}

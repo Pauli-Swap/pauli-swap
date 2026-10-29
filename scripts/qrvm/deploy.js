@@ -1,16 +1,37 @@
 const { Web3 } = require('qrl-web3-qip55');
-const { loadEnv, artifact, link, codeChunkInitCode, Chain, writeDeployment, strip } = require('./lib');
+const { loadEnv, artifact, link, codeChunkInitCode, Chain, writeDeployment, readDeployment, strip } = require('./lib');
 
 /// Deploys PauliSwap V2 and V3 to a QIP-55 network. Usage:
 ///   QRVM_ENV=.env.devnet node scripts/qrvm/deploy.js
 /// The network name in deployments/ comes from QRVM_NETWORK.
+///
+/// QRVM_ADD=SwapRouter02 instead adds that one contract to the existing
+/// deployment record, wired to its factories and WQRL, so the pools and their
+/// history stay where they are.
 
 const keccak = (hex) => Web3.utils.keccak256(hex);
+
+const swapRouter02Args = (contracts) => [contracts.PauliV2Factory, contracts.PauliV3Factory, contracts.WQRL];
+
+async function add(env, network, chain) {
+  if (env.QRVM_ADD !== 'SwapRouter02') throw new Error(`QRVM_ADD=${env.QRVM_ADD}: only SwapRouter02 can be added`);
+  const out = readDeployment(network);
+  if (out.chainId !== chain.chainId) throw new Error(`deployment is for chain ${out.chainId}, node is ${chain.chainId}`);
+  if (out.contracts.SwapRouter02) throw new Error(`SwapRouter02 is already deployed at ${out.contracts.SwapRouter02}`);
+  const router = await chain.deploy('SwapRouter02', swapRouter02Args(out.contracts));
+  out.contracts.SwapRouter02 = router.options.address;
+  console.log(`  SwapRouter02       ${out.contracts.SwapRouter02}`);
+  if (strip(await chain.code(out.contracts.SwapRouter02)).length === 0) throw new Error('SwapRouter02 has no code');
+  out.transactions = [...(out.transactions || []), ...chain.receipts];
+  out.addedAt = { ...(out.addedAt || {}), SwapRouter02: new Date().toISOString() };
+  console.log(`wrote ${writeDeployment(network, out)}`);
+}
 
 async function main() {
   const env = loadEnv();
   const network = env.QRVM_NETWORK || 'devnet';
   const chain = await new Chain(env).init();
+  if (env.QRVM_ADD) return add(env, network, chain);
   const startBlock = Number(await chain.web3.qrl.getBlockNumber());
   console.log(`network ${network}  chain ${chain.chainId}  block ${startBlock}`);
   console.log(`deployer ${chain.address}  balance ${(await chain.balance(chain.address)) / 10n ** 18n} QRL`);
@@ -60,6 +81,7 @@ async function main() {
   ]));
   record('TickLens', await chain.deploy('TickLens'));
   record('V3Migrator', await chain.deploy('V3Migrator', [v3Factory.options.address, wqrl.options.address, npm.options.address]));
+  record('SwapRouter02', await chain.deploy('SwapRouter02', swapRouter02Args(out.contracts)));
 
   for (const [name, address] of Object.entries(out.contracts)) {
     if (strip(await chain.code(address)).length === 0) throw new Error(`${name} has no code at ${address}`);

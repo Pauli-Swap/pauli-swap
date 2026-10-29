@@ -22,6 +22,9 @@ function loadEnv() {
   if (!fs.existsSync(file)) throw new Error(`${path.relative(ROOT, file)} missing; copy .env.devnet.example`);
   const env = dotenv.parse(fs.readFileSync(file));
   assertPrivate(env);
+  // Settings that pick what a run does, not where it signs, may come from the
+  // shell: QRVM_NETWORK=devnet-audit npm run deploy:qrvm.
+  for (const key of ['QRVM_NETWORK', 'QRVM_ADD', 'AUDIT_CODE_ONLY']) if (process.env[key]) env[key] = process.env[key];
   return env;
 }
 

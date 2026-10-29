@@ -52,6 +52,7 @@ async function systemFor(a) {
       npm: a.at('NonfungiblePositionManager', d.NonfungiblePositionManager),
       tickLens: a.at('TickLens', d.TickLens),
       migrator: a.at('V3Migrator', d.V3Migrator),
+      router02: d.SwapRouter02 ? a.at('SwapRouter02', d.SwapRouter02) : null,
       oracle: d.Oracle,
       chunks: [d.PoolCodeChunkA, d.PoolCodeChunkB],
     };
@@ -66,7 +67,8 @@ async function systemFor(a) {
   const npm = await a.deploy('NonfungiblePositionManager', [a.addr(v3Factory), a.addr(wqrl), a.addr(descriptor)]);
   const tickLens = await a.deploy('TickLens');
   const migrator = await a.deploy('V3Migrator', [a.addr(v3Factory), a.addr(wqrl), a.addr(npm)]);
-  return { wqrl, v2Factory, router, v3Factory, swapRouter, quoter, npm, tickLens, migrator };
+  const router02 = await a.deploy('SwapRouter02', [a.addr(v2Factory), a.addr(v3Factory), a.addr(wqrl)]);
+  return { wqrl, v2Factory, router, v3Factory, swapRouter, quoter, npm, tickLens, migrator, router02 };
 }
 
 async function fixtures(a, s) {
@@ -80,14 +82,15 @@ async function fixtures(a, s) {
   const reentrancy = await a.deploy('PauliV2ReentrancyProbe');
   const ndc = await a.deploy('NoDelegateCallProbe');
   const receiver = await a.deploy('SQRCTN1ReceiverProbe');
+  const routers = s.router02 ? [s.router, s.swapRouter, s.router02] : [s.router, s.swapRouter];
   for (const t of [X, Y, Z, D]) {
-    for (const spender of [s.router, s.swapRouter, caller, borrower, s.npm]) {
+    for (const spender of [...routers, caller, borrower, s.npm]) {
       await a.send(t, 'approve', [a.addr(spender), MAX]);
     }
   }
   // The devnet deployer lives on a 100 QRL faucet drip.
   await a.send(s.wqrl, 'deposit', [], { value: 20n * E18 });
-  for (const spender of [s.router, s.swapRouter, caller, s.npm]) await a.send(s.wqrl, 'approve', [a.addr(spender), MAX]);
+  for (const spender of [...routers, caller, s.npm]) await a.send(s.wqrl, 'approve', [a.addr(spender), MAX]);
   return { X, Y, Z, D, caller, borrower, reentrancy, ndc, receiver };
 }
 
@@ -497,6 +500,101 @@ async function positions(a, s, f, R) {
   R.set(c, 'migrator.revert: percentage 0', await a.revertReason(s.migrator, 'migrate', [[a.addr(v2Pair), 1n, 0, a.addr(f.Y), a.addr(f.Z), 3000, -1200, 1200, 0n, 0n, me, DEADLINE, false]]));
 }
 
+/// SwapRouter02 on the pairs and pools the sections above left behind: V2 and
+/// V3 swaps against the quotes of the old routers, the interface fee paid out
+/// by sweepTokenWithFee / unwrapWQRL9WithFee, a V2 hop chained into a V3 hop
+/// through the router balance, and the deadline and fee bounds.
+async function router02(a, s, f, R) {
+  const c = a.name;
+  const me = a.deployer;
+  const r = s.router02;
+  const fee = 3000;
+  const bips = 25n;
+  const word = (n) => (a.name === 'qrvm' ? 'Q' + n.padStart(128, '0') : '0x' + n.padStart(40, '0'));
+  const MSG_SENDER = word('1');
+  const ADDRESS_THIS = word('2');
+  // An address with no code, so it can take QRL; the same on every run.
+  const treasury = word('fee');
+  const balanceOf = (t, who) => a.call(t, 'balanceOf', [a.addr(who)]);
+
+  R.check(c, 'router02 wiring: factoryV2, factory, WQRL9', a.sameAddress(await a.call(r, 'factoryV2'), s.v2Factory)
+    && a.sameAddress(await a.call(r, 'factory'), s.v3Factory) && a.sameAddress(await a.call(r, 'WQRL9'), s.wqrl));
+
+  // V2 against PauliV2Router02's quotes, on X/Z topped up with fresh
+  // liquidity: the V2 section leaves X/Y nearly drained.
+  await a.send(s.router, 'addLiquidity', [a.addr(f.X), a.addr(f.Z), 50n * E18, 50n * E18, 0n, 0n, me, DEADLINE]);
+  const pathXZ = [a.addr(f.X), a.addr(f.Z)];
+  const [, quotedOut] = await a.call(s.router, 'getAmountsOut', [E18, pathXZ]);
+  let before = await balanceOf(f.Z, me);
+  await a.send(r, 'swapExactTokensForTokens', [E18, quotedOut, pathXZ, MSG_SENDER], { tag: 'router02 V2 swapExactTokensForTokens' });
+  const v2Out = (await balanceOf(f.Z, me)) - before;
+  R.set(c, 'router02.V2 exact in X->Z 1e18 out', v2Out);
+  R.check(c, 'router02 V2 exact in equals PauliV2Router02.getAmountsOut', v2Out === quotedOut);
+  const [quotedIn] = await a.call(s.router, 'getAmountsIn', [E18, [a.addr(f.Z), a.addr(f.X)]]);
+  before = await balanceOf(f.Z, me);
+  await a.send(r, 'swapTokensForExactTokens', [E18, quotedIn, [a.addr(f.Z), a.addr(f.X)], MSG_SENDER]);
+  R.set(c, 'router02.V2 exact out Z->X 1e18 in', before - (await balanceOf(f.Z, me)));
+  R.check(c, 'router02 V2 exact out equals PauliV2Router02.getAmountsIn', before - (await balanceOf(f.Z, me)) === quotedIn);
+  before = await balanceOf(s.wqrl, me);
+  await a.send(r, 'swapExactTokensForTokens', [E18, 0n, [a.addr(f.D), a.addr(s.wqrl)], MSG_SENDER]);
+  R.set(c, 'router02.V2 fee-on-transfer D->WQRL 1e18 out', (await balanceOf(s.wqrl, me)) - before);
+
+  // V3 against the Quoter
+  const q1 = await a.call(s.quoter, 'quoteExactInputSingle', [a.addr(f.X), a.addr(f.Y), fee, 2n * E18, 0n]);
+  before = await balanceOf(f.Y, me);
+  await a.send(r, 'exactInputSingle', [[a.addr(f.X), a.addr(f.Y), fee, MSG_SENDER, 2n * E18, q1, 0n]], { tag: 'router02 V3 exactInputSingle' });
+  R.set(c, 'router02.V3 exactInputSingle X->Y 2e18 out', (await balanceOf(f.Y, me)) - before);
+  R.check(c, 'router02 V3 exactInputSingle equals the Quoter', (await balanceOf(f.Y, me)) - before === q1);
+  const pathZYX = a.path([f.Z, f.Y, f.X], [fee, fee]);
+  const q2 = await a.call(s.quoter, 'quoteExactOutput', [pathZYX, E18]);
+  before = await balanceOf(f.X, me);
+  await a.send(r, 'exactOutput', [[pathZYX, MSG_SENDER, E18, q2]], { tag: 'router02 V3 exactOutput 2 hops' });
+  R.set(c, 'router02.V3 exactOutput 1e18 X from Z in', before - (await balanceOf(f.X, me)));
+  R.check(c, 'router02 V3 exactOutput equals the Quoter', before - (await balanceOf(f.X, me)) === q2);
+
+  // Interface fee on a token output
+  const gross = await a.call(s.quoter, 'quoteExactInputSingle', [a.addr(f.X), a.addr(f.Y), fee, 3n * E18, 0n]);
+  const tBefore = await balanceOf(f.Y, treasury);
+  before = await balanceOf(f.Y, me);
+  await a.send(r, 'multicall', [DEADLINE, [
+    a.encodeCall(r, 'exactInputSingle', [[a.addr(f.X), a.addr(f.Y), fee, ADDRESS_THIS, 3n * E18, gross, 0n]]),
+    a.encodeCall(r, 'sweepTokenWithFee', [a.addr(f.Y), gross, me, bips, treasury]),
+  ]], { tag: 'router02 multicall swap+sweepTokenWithFee' });
+  const feePaid = (await balanceOf(f.Y, treasury)) - tBefore;
+  R.set(c, 'router02.fee: sweepTokenWithFee fee, net', [feePaid, (await balanceOf(f.Y, me)) - before]);
+  R.check(c, 'sweepTokenWithFee pays gross * 25 / 10000 to the fee recipient', feePaid === (gross * bips) / 10_000n);
+  R.check(c, 'sweepTokenWithFee pays the rest to the recipient', (await balanceOf(f.Y, me)) - before === gross - feePaid);
+  R.set(c, 'router02.Y left in the router', await balanceOf(f.Y, r));
+
+  // Interface fee on a native QRL output
+  const nBefore = await a.nativeBalance(treasury);
+  const wq = await a.call(s.quoter, 'quoteExactInputSingle', [a.addr(f.X), a.addr(s.wqrl), fee, E18, 0n]);
+  await a.send(r, 'multicall', [DEADLINE, [
+    a.encodeCall(r, 'exactInputSingle', [[a.addr(f.X), a.addr(s.wqrl), fee, ADDRESS_THIS, E18, 0n, 0n]]),
+    a.encodeCall(r, 'unwrapWQRL9WithFee', [0n, me, bips, treasury]),
+  ]], { tag: 'router02 multicall swap+unwrapWQRL9WithFee' });
+  R.set(c, 'router02.fee: unwrapWQRL9WithFee fee in QRL', (await a.nativeBalance(treasury)) - nBefore);
+  R.check(c, 'unwrapWQRL9WithFee pays gross * 25 / 10000 in QRL', (await a.nativeBalance(treasury)) - nBefore === (wq * bips) / 10_000n);
+  R.set(c, 'router02.WQRL and QRL left in the router', [await balanceOf(s.wqrl, r), await a.nativeBalance(r)]);
+
+  // A V2 hop into a V3 hop
+  before = await balanceOf(f.Y, me);
+  await a.send(r, 'multicall', [DEADLINE, [
+    a.encodeCall(r, 'swapExactTokensForTokens', [E18, 0n, pathXZ, ADDRESS_THIS]),
+    a.encodeCall(r, 'exactInputSingle', [[a.addr(f.Z), a.addr(f.Y), fee, MSG_SENDER, 0n, 1n, 0n]]),
+  ]], { tag: 'router02 multicall V2 then V3' });
+  R.set(c, 'router02.mixed X-(V2)->Z-(V3)->Y 1e18 out', (await balanceOf(f.Y, me)) - before);
+  R.set(c, 'router02.Z left after the mixed route', await balanceOf(f.Z, r));
+
+  // Bounds
+  const swapCall = a.encodeCall(r, 'swapExactTokensForTokens', [E18, MAX, pathXZ, me]);
+  R.set(c, 'router02.revert: expired deadline', await a.revertReason(r, 'multicall', [1n, [swapCall]]));
+  R.set(c, 'router02.revert: multicall forwards Too little received', await a.revertReason(r, 'multicall', [DEADLINE, [swapCall]]));
+  R.set(c, 'router02.revert: feeBips 101 reverts', (await a.revertReason(r, 'sweepTokenWithFee', [a.addr(f.Y), 0n, me, 101n, treasury])) !== null);
+  R.set(c, 'router02.revert: feeBips 0 reverts', (await a.revertReason(r, 'unwrapWQRL9WithFee', [0n, me, 0n, treasury])) !== null);
+  R.set(c, 'router02.revert: short sweep', await a.revertReason(r, 'sweepTokenWithFee', [a.addr(f.Y), 1n, me, bips, treasury]));
+}
+
 async function qrvmOnly(a, s, R) {
   const c = a.name;
   // Every deployed runtime must be the build output, with immutables and
@@ -555,14 +653,23 @@ async function main() {
   const e = await new EvmAdapter(hre).init();
   const startBlock = Number(await chain.web3.qrl.getBlockNumber());
 
-  for (const a of [e, q]) {
-    console.log(`== ${a.name}`);
-    const s = await systemFor(a);
-    const f = await fixtures(a, s);
-    if (a.name === 'qrvm') await qrvmOnly(a, s, R);
-    await v2(a, s, f, R);
-    await v3(a, s, f, R);
-    await positions(a, s, f, R);
+  // AUDIT_CODE_ONLY=1 checks only that the deployed runtime code is the build
+  // output, without the scenario: for a live deployment whose factories should
+  // not get the scenario's test pools, next to a full run on a twin deployment
+  // of the same build.
+  if (env.AUDIT_CODE_ONLY === '1') {
+    await qrvmOnly(q, await systemFor(q), R);
+  } else {
+    for (const a of [e, q]) {
+      console.log(`== ${a.name}`);
+      const s = await systemFor(a);
+      const f = await fixtures(a, s);
+      if (a.name === 'qrvm') await qrvmOnly(a, s, R);
+      await v2(a, s, f, R);
+      await v3(a, s, f, R);
+      await positions(a, s, f, R);
+      if (s.router02) await router02(a, s, f, R);
+    }
   }
 
   const rows = compare(R);
@@ -587,7 +694,7 @@ async function main() {
   };
   const dir = path.join(ROOT, 'docs', 'onchain');
   fs.mkdirSync(dir, { recursive: true });
-  const file = path.join(dir, `${network}.json`);
+  const file = path.join(dir, `${network}${env.AUDIT_CODE_ONLY === '1' ? '.code' : ''}.json`);
   fs.writeFileSync(file, JSON.stringify(report, null, 2) + '\n');
 
   console.log(`\ncompared ${report.summary.compared}, matched ${report.summary.matched}, mismatched ${mismatches.length}`);
