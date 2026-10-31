@@ -48,6 +48,18 @@ hide.
 - [ ] Track `hypc` releases. On each one: recompile, rerun `check:qrvm`
       (OC-V3-02 lint) and the whole on-chain audit, and update QRVM.md.
 
+## 5. CI (TODO 4.1)
+
+Added 2026-10-30 from `pauli-swap-interface/docs/PROPOSAL-SEASON-1.md` §7.
+The repo has no CI.
+
+- [ ] `.github/workflows/ci.yml`: `npm test` (compile + hardhat) and
+      `check:qrvm`. The runner needs the `hypc` compiler; pin the version
+      the audit ran on, so a `hypc` release (§4) is picked up on purpose.
+
+The batch 5.0 item "swap with the fee on the interface with a real wallet"
+is in the interface proposal's §1 checklist, not here.
+
 ## Done when
 
 ONCHAIN-AUDIT.md "Not covered" is empty or every remaining line says why it
